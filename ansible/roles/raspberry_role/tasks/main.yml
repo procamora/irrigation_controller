@@ -3,7 +3,10 @@
 
 - name: Main | pre_tasks
   include_tasks: pre_tasks.yml
-#
+
+- name: Main | Install motd
+  include_tasks: packages.yml
+
 #- name: Main | Create a directory certificates
 #  file:
 #    path: "{{ path_ssl }}/"
@@ -49,10 +52,9 @@
     create: yes
     validate: 'visudo -cf %s'
 
+- name: Main | Install motd
+  include_tasks: motd.yml
 
-#- name: Main | Install motd
-#  include: motd.yml
-#
 #- name: Main | Install custom_workspace
 #  include: zsh.yml
 
