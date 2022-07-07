@@ -1,0 +1,8 @@
+---
+# defaults file for common_role
+
+#path_ssl_telegraf: "{{ path_ssl }}/telegraf"
+
+#path_custom_worspace: /opt/custom_workspace
+config_system_locale: 'en_US.UTF-8'
+config_system_language: 'en_US.UTF-8'

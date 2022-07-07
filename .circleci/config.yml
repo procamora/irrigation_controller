@@ -1,0 +1,46 @@
+version: 2  # https://circleci.com/docs/2.0/adv-config/
+jobs:
+  shellcheck:
+    docker:
+      - image: koalaman/shellcheck-alpine:stable
+    steps:
+      - checkout
+      - run:
+          name: Check Scripts
+          command: |
+            find . -type f -name '*.sh' | wc -l
+            cd iaac/ && find . -type f -name '*.sh' -exec shellcheck --external-sources {} \; && cd -
+  yamllint:
+    docker:
+      - image: circleci/python:3.8
+    steps:
+      - checkout
+      - run:
+          name: Install YamlLint
+          command: pip install --user yamllint
+      - run:
+          name: Run YamlLint
+          command: |
+            export PATH=/home/circleci/.local/bin:$PATH
+            wget -q https://gist.githubusercontent.com/procamora/a8e68a2067003994581562e35e364ade/raw/87940e46599fc8f680e4b42f6ddbca0dddad0802/my_relased.yml
+            yamllint -c ./my_relased.yml . > ./output
+            cat ./output
+            grep -q "error" ./output && (echo "detect error" && exit 1) || exit 0
+workflows:
+  version: 2
+  check-build:
+    jobs:
+      - shellcheck:
+          filters:
+            branches: # only run shellcheck on branchs
+              only:
+                - main
+                - master
+                - dev
+      - yamllint:
+          filters:
+            branches: # only run shellcheck on branchs
+              only:
+                - main
+                - master
+                - dev

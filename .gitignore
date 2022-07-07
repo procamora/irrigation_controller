@@ -1,3 +1,8 @@
+.idea/
+*.backup
+vars_secrets.yml
+#secrets.tfvars
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -127,3 +132,7 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+
+
+
