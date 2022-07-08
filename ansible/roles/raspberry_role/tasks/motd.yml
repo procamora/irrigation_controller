@@ -1,0 +1,108 @@
+---
+
+- name: Motd | Install requirements motd
+  apt:
+    name:
+      - figlet
+      - rubygems
+      - lolcat
+    state: latest
+
+- name: Motd | Git clone motd
+  git:
+    repo: https://github.com/angela-d/motd-for-centos.git
+    dest: /opt/motd
+    force: yes
+
+- name: Motd | Create directory motd
+  file:
+    path: /etc/update-motd.d/
+    state: directory
+
+#    - name: asdf
+#      copy:
+#        src: /opt/motd/update-check.sh
+#        dest: /etc/update-motd.d/90-updates-available
+#        mode: 0755
+#        remote_src: yes
+
+- name: Motd | Copy motd.sh
+  copy:
+    src: /opt/motd/motd.sh
+    dest: /usr/local/bin/motd.sh
+    mode: 0755
+    remote_src: yes
+
+- name: Motd | Copy update-check.sh
+  copy:
+    src: /opt/motd/update-check.sh
+    dest: /usr/local/bin/update-check.sh
+    mode: 0755
+    remote_src: yes
+
+- name: Motd | Configure motd.sh
+  lineinfile:
+    path: /usr/local/bin/motd.sh
+    regexp: '{{ item.regex }}'
+    line: '{{ item.line }}'
+    backrefs: yes
+  with_items:
+    - { regex: '^DISTRIB_DESCRIPTION', line: "DISTRIB_DESCRIPTION=$(cat /etc/os-release | grep 'PRETTY_NAME' | awk -F '=' '{print $2}' | tr -d '\"')" }
+    - { regex: '^DISPLAYNAME', line: 'DISPLAYNAME="{{ ansible_hostname }}"' }
+    - { regex: '^LOLCAT', line: "LOLCAT=$(whereis lolcat | awk -F ' ' '{print $2}')" }
+    - { regex: '^swap_usage=\$\((.*)\)$', line: 'swap_usage=$(\1 2>/dev/null || echo "0/0 Gb")' }
+#      - { regex: '^source (.*)$', line: '# source \1' }
+
+- name: Motd | Configure update-check.sh in Debian
+  lineinfile:
+    path: /usr/local/bin/update-check.sh
+    regexp: '{{ item.regex }}'
+    line: '{{ item.line }}'
+    backrefs: yes
+  with_items:
+    - { regex: '^UPDATES', line: "UPDATES=$(apt list updates)" }
+    - { regex: '^UPDATES_COUNT', line: "UPDATES_COUNT=$(apt list --upgradeable --quiet 2>/dev/null | grep -v 'Listing' | wc -l)" }
+  when: ansible_os_family == 'Debian'
+
+- name: Motd | Configure /etc/profile
+  lineinfile:
+    path: /etc/profile
+    regexp: 'motd'
+    line: '/usr/local/bin/motd.sh'
+#      backrefs: yes
+
+- block:
+  - name: Motd | Check if exists zprofile
+    stat:
+      path: /etc/zsh/zprofile
+    register: _zprofile
+
+  - name: Motd | Configure /etc/zsh/zprofile
+    lineinfile:
+      path: /etc/zsh/zprofile
+      regexp: 'motd'
+      line: '/usr/local/bin/motd.sh'
+  #      backrefs: yes
+    when: _zprofile.stat.exists
+
+# FIXME VERIFICAR QUE ESTA BIEN Y ES NECESARIA LA REGLA
+- name: Motd | Create if not exists crontab
+  file:
+    path: /etc/crontab
+    state: touch
+
+- name: Motd | Set crontab
+  lineinfile:
+    path: /etc/crontab
+    regexp: 'update\-check\.sh'
+    line: '28 2    * * *   root    /usr/local/bin/update-check.sh'
+#      backrefs: yes
+
+- name: Motd | Execute update-check.sh
+  shell: /usr/local/bin/update-check.sh
+
+- name: Motd | Ensure file motd is empty
+  copy:
+    content: ""
+    dest: /etc/motd
+    force: yes

@@ -29,9 +29,11 @@
           - trash-cli
           - tree
           - sudo
-        #          - atop
-        #        - auditd
-        #        - ntp
+          - tmux
+          - raspberrypi-kernel
+          - raspberrypi-kernel-headers
+        # - auditd
+        # - ntp
         state: latest
         update_cache: yes
         cache_valid_time: 3600

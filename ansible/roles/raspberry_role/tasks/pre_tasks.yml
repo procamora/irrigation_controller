@@ -21,7 +21,7 @@
     state: present
 
 - name: Get current locale and language configuration
-  command: localectl status
+  shell: localectl status
   register: locale_status
   changed_when: false
 
@@ -37,3 +37,21 @@
   become: yes
   shell: localectl set-locale LANG={{ config_system_locale }} LANGUAGE={{ config_system_language }}
   changed_when: locale_lang != config_system_locale or locale_language != config_system_language
+
+
+- name: swap
+  block:
+    - name: swap | lineinfile swap
+      lineinfile:
+        path: "/etc/dphys-swapfile"
+        regexp: 'CONF_SWAPSIZE=\\d+'
+        line: "CONF_SWAPSIZE=2048"
+
+    - name: dphys-swapfile setup
+      shell: dphys-swapfile setup
+      register: _swapfile_setup
+
+    - name: dphys-swapfile swapon
+      shell: dphys-swapfile swapon
+      when:
+        - _swapfile_setup.stdout | regex_search('generating swapfile', multiline=True, ignorecase=True)

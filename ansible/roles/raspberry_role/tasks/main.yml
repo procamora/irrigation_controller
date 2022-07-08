@@ -1,26 +1,20 @@
 ---
 # tasks file for common_role
 
+# todo ok
+#- name: Main | pre_tasks
+#  include_tasks: pre_tasks.yml
+
 - name: Main | pre_tasks
-  include_tasks: pre_tasks.yml
+  include_tasks: raspi_config.yml
 
-- name: Main | Install motd
-  include_tasks: packages.yml
-
-#- name: Main | Create a directory certificates
-#  file:
-#    path: "{{ path_ssl }}/"
-#    state: directory
-#    owner: root
-#    group: root
-#    mode: '0765'
+# ok
+#- name: Main | Install motd
+#  include_tasks: packages.yml
 
 #- name: Main | Install Filebeat
 #  include: filebeat.yml
-#
-#- name: Main | Install Telegraf
-#  include: telegraf.yml
-#
+
 #- name: Main | Configure firewalld
 #  include: firewalld.yml
 #  when:
@@ -31,29 +25,30 @@
 #    name: "{{ procamora_user }}"
 #    state: present
 
-- name: Main | Create main user
-  user:
-    name: "{{ procamora_user }}"
-    password: "{{ procamora_pass | password_hash('sha512') }}"
-    shell: /bin/bash
-    groups: adm, dialout, sudo, plugdev
-    group: "{{ procamora_user }}"
-    append: yes
-    force: yes
-    comment: "Default user"
+#- name: Main | Create main user
+#  user:
+#    name: "{{ procamora_user }}"
+#    password: "{{ procamora_pass | password_hash('sha512') }}"
+#    shell: /bin/bash
+#    groups: adm, dialout, sudo, plugdev
+#    group: "{{ procamora_user }}"
+#    append: yes
+#    force: yes
+#    comment: "Default user"
+#
+#- name: Main | Set user in sudoers
+#  lineinfile:
+#    path: "/etc/sudoers.d/{{ procamora_user }}"
+#    state: present
+#    regexp: '^{{ procamora_user }}'
+#    line: '{{ procamora_user }} ALL=(ALL) NOPASSWD: ALL'
+#    backrefs: no
+#    create: yes
+#    validate: 'visudo -cf %s'
 
-- name: Main | Set user in sudoers
-  lineinfile:
-    path: "/etc/sudoers.d/{{ procamora_user }}"
-    state: present
-    regexp: '^{{ procamora_user }}'
-    line: '{{ procamora_user }} ALL=(ALL) NOPASSWD: ALL'
-    backrefs: no
-    create: yes
-    validate: 'visudo -cf %s'
-
-- name: Main | Install motd
-  include_tasks: motd.yml
+# todo ok
+#- name: Main | Install motd
+#  include_tasks: motd.yml
 
 #- name: Main | Install custom_workspace
 #  include: zsh.yml
