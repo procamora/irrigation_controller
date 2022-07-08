@@ -8,9 +8,15 @@
 - name: Main | pre_tasks
   include_tasks: raspi_config.yml
 
+- name: Main | pre_tasks
+  include_tasks: reboot.yml
+
 # ok
 #- name: Main | Install motd
 #  include_tasks: packages.yml
+
+#- name: Main | pre_tasks
+#  include_tasks: reboot.yml
 
 #- name: Main | Install Filebeat
 #  include: filebeat.yml
