@@ -2,6 +2,8 @@
 *.backup
 vars_secrets.yml
 #secrets.tfvars
+credentials.json
+token.json
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
