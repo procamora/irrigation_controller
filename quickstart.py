@@ -90,7 +90,6 @@ class GCalendar:
         cron.command(f'set_off ZONA3', 0, 9, '*', '*', '*')
         cron.command(f'# Zones')
 
-
     # Prints the start and name of the next 10 events
         for event in events_result['items']:
             start = event['start'].get('dateTime')
@@ -98,11 +97,11 @@ class GCalendar:
             if start is None or end is None:  # skip event all day
                 log.warning(f'skip {event["summary"]}')
                 continue
-            log.info(f'{start} {end} {event["summary"]}')
+
+            # log.info(f'{start} {end} {event["summary"]}')
             dt_start: datetime = datetime.fromisoformat(event['start'].get('dateTime'))
             dt_end: datetime = datetime.fromisoformat(event['end'].get('dateTime'))
 
-            # 0 4 25 2 *
             cron.command(f'set_on {event["summary"]}', dt_start.minute, dt_start.hour, dt_start.day, dt_start.month, '*')
             cron.command(f'set_off {event["summary"]}', dt_end.minute, dt_end.hour, dt_end.day, dt_end.month, '*')
 
@@ -111,14 +110,10 @@ class GCalendar:
         # cron.run('check')
         # cron.run('write')
 
-        # cron.write()
-
-        # self.get_event_recurence(events_result['items'])
-
-    @staticmethod
-    def get_event_recurence(events: List[Dict]):
-        asd: Set = set(map(lambda i: i["summary"], events))
-        log.info(asd)
+    # @staticmethod
+    # def get_event_recurence(events: List[Dict]):
+    #     asd: Set = set(map(lambda i: i["summary"], events))
+    #     log.info(asd)
 
 
 def main():

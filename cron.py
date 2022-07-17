@@ -24,7 +24,6 @@ class Cron:
         if cmd[0] == '#':
             self.commands.append(f'{cmd}')
         else:
-            log.info(hour)
             if len(str(hour)) == 1:
                 hour = f'{hour} '
             if len(str(day)) == 1:
@@ -35,8 +34,7 @@ class Cron:
                 month = f'{month} '
 
             cron = f'{minute} {hour} {day} {month} {week}'
-            log.info(cron)
-            # command =
+            # log.info(cron)
             self.commands.append(f'{cron}    {cmd}')
 
     def to_cron(self) -> Text:
