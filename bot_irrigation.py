@@ -248,8 +248,10 @@ def check_port(message: types.Message, zone: Text) -> NoReturn:
 
 @bot.message_handler(func=lambda message: message.chat.id == owner_bot, commands=['off'])
 def send_off(message: types.Message) -> NoReturn:
+    send_status(message)
     bot.reply_to(message, "closed all relays", reply_markup=get_markup_cmd())
     # TODO parar todos los reles
+    controller.stop_all()
     send_status(message)
     return
 

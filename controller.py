@@ -13,9 +13,6 @@ try:
 except RuntimeError:
     log.critical("Error importing RPi.GPIO!  This is probably because you need superuser privileges.\n"
                  "You can achieve this by using 'sudo' to run your script")
-except ModuleNotFoundError:
-    log.critical("Error importing RPi.GPIO!  This is probably because you need superuser privileges.\n"
-                 "You can achieve this by using 'sudo' to run your script")
 
 
 # GPIO.setwarnings(False)
@@ -49,5 +46,9 @@ class Controller:
     def set_zone(self, zone: int, state: bool = False) -> NoReturn:
         GPIO.output(zone, state)
 
-    def cleanup(self):
+    def stop_all(self) -> NoReturn:
+        for zone in [self.zone_vegetable, self.zone_front, self.zone_back]:
+            self.set_zone(zone, False)
+
+    def cleanup(self) -> NoReturn:
         GPIO.cleanup()
