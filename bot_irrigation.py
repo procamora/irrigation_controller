@@ -15,10 +15,12 @@ from pathlib import Path
 from typing import NoReturn, Tuple, Text
 
 from procamora_utils.logger import get_logging, logging
-from gcalendar import GCalendar
 from requests import exceptions
 from telebot import TeleBot, types, apihelper
 from terminaltables import AsciiTable
+
+from gcalendar import GCalendar
+from controller import Controller
 
 log: logging = get_logging(False, 'bot_irrigation')
 
@@ -66,6 +68,7 @@ else:
 owner_bot: int = int(config_basic.get('ADMIN'))
 calendar_id: Text = config_basic.get('CALENDAR_ID')
 
+controller: Controller = Controller()
 
 def get_markup_cmd() -> types.ReplyKeyboardMarkup:
     markup: types.ReplyKeyboardMarkup = types.ReplyKeyboardMarkup(one_time_keyboard=True)
@@ -77,7 +80,15 @@ def get_markup_cmd() -> types.ReplyKeyboardMarkup:
 
 def get_markup_zones() -> types.ReplyKeyboardMarkup:
     markup: types.ReplyKeyboardMarkup = types.ReplyKeyboardMarkup(one_time_keyboard=True)
-    markup.row("Vegetable 🍅", "Front Garden 🌴", "Back Garden 🌵")
+    markup.row(controller.name_vegetable, controller.name_front, controller.name_back)
+    # markup.row(my_commands[4])
+    return markup
+
+def get_markup_zones2() -> types.ReplyKeyboardMarkup:
+    markup: types.ReplyKeyboardMarkup = types.ReplyKeyboardMarkup(one_time_keyboard=True)
+    markup.row(controller.name_vegetable)
+    markup.row(controller.name_front)
+    markup.row(controller.name_back)
     # markup.row(my_commands[4])
     return markup
 
@@ -216,7 +227,9 @@ def send_status(message: types.Message) -> NoReturn:
 
 @bot.message_handler(func=lambda message: message.chat.id == owner_bot, commands=['get'])
 def send_get(message: types.Message) -> NoReturn:
-    pass
+    bot.reply_to(message, "zone???", reply_markup=get_markup_zones2())
+    # bot.register_next_step_handler(message, check_port, zone='aadsasd')
+    return
 
 
 @bot.message_handler(func=lambda message: message.chat.id == owner_bot, commands=['set'])
