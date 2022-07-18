@@ -1,0 +1,11 @@
+[Unit]
+Description=Irrigation Controller
+After=multi-user.target
+
+[Service]
+Type=idle
+ExecStart=/usr/bin/python3 /home/procamora/irrigation_controller/bot_irrigation.py >> /home/procamora/irrigation_controller/bot.log 2>&1
+User=procamora
+
+[Install]
+WantedBy=multi-user.target
