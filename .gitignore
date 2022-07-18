@@ -4,6 +4,7 @@ vars_secrets.yml
 #secrets.tfvars
 credentials.json
 token.json
+settings.cfg
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

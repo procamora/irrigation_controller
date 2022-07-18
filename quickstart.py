@@ -6,14 +6,13 @@ from __future__ import print_function
 import os.path
 import sys
 from datetime import datetime
-from typing import Dict, List, Set
+from typing import Dict, List, Set, Text
 
 from google.auth.exceptions import GoogleAuthError
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
-# from plan import Plan
 from procamora_utils.logger import get_logging, logging
 
 from cron import Cron
@@ -23,7 +22,7 @@ log: logging = get_logging(True, 'calendar')
 
 def auth():
     # If modifying these scopes, delete the file token.json.
-    scopes = [
+    scopes: List[Text] = [
         'https://www.googleapis.com/auth/calendar.readonly',
         'https://www.googleapis.com/auth/calendar.events.readonly'
     ]
@@ -69,14 +68,14 @@ class GCalendar:
             if not page_token:
                 break
 
-    def other(self):
+    def other(self, calendar_id: Text):
         log.info(self.service)
         # Call the Calendar API
         now = datetime.utcnow().isoformat() + 'Z'  # 'Z' indicates UTC time
         log.info('Getting the upcoming 10 events')
-        events_result: Dict = self.service.events().list(calendarId='q9sg6klvberttgejc7k31qar6g@group.calendar.google.com',
+        events_result: Dict = self.service.events().list(calendarId=calendar_id,
                                                          timeMin=now,
-                                                         maxResults=10,
+                                                         maxResults=20,
                                                          singleEvents=True,
                                                          orderBy='startTime').execute()
         if not events_result['items']:
@@ -88,6 +87,9 @@ class GCalendar:
         cron.command(f'set_off ZONA1', 0, 9, '*', '*', '*')
         cron.command(f'set_off ZONA2', 0, 9, '*', '*', '*')
         cron.command(f'set_off ZONA3', 0, 9, '*', '*', '*')
+        #  /home/pi/tg/bin/telegram-cli -e 'msg domotica_pablo "/modo_automatico on 23"' >/tmp/tg_on.log 2>/tmp/tg_on_err.log
+        cron.command(f'sudo systemctl -q is-active mio_bot_irrigation.service && echo YES || sudo systemctl restart mio_bot_irrigation.service',
+                     '*/10', '*', '*', '*', '*')
         cron.command(f'# Zones')
 
     # Prints the start and name of the next 10 events
@@ -119,7 +121,7 @@ class GCalendar:
 def main():
     calendar = GCalendar()
     # calendar.get_calendar_list()
-    calendar.other()
+    calendar.other('<CALENDAR_ID>')
 
 
 if __name__ == '__main__':

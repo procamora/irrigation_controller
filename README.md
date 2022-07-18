@@ -14,3 +14,31 @@ touch /root/.ssh/authorized_keys
 chmod 600 /root/.ssh/authorized_keys  # le quitamos los permisos necesarios
 
 
+
+
+```
+"""commands
+Name:
+procamora irrigation controller
+
+Username:
+procamora_irrigation_bot
+
+Description:
+This is a bot to manage network scanner using nmap. A local agent is required to perform the scans
+
+About:
+This bot has been developed by @procamora
+
+Botpic:
+<imagen del bot>
+
+Commands:
+scan - scan networks
+online - get hosts online
+offline - get hosts offline
+pdf - get pdf report
+help - Show help
+start - Start the bot
+"""
+```
