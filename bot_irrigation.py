@@ -15,11 +15,10 @@ from pathlib import Path
 from typing import NoReturn, Tuple, Text
 
 from procamora_utils.logger import get_logging, logging
+from gcalendar import GCalendar
 from requests import exceptions
 from telebot import TeleBot, types, apihelper
 from terminaltables import AsciiTable
-
-from quickstart import GCalendar
 
 log: logging = get_logging(False, 'bot_irrigation')
 
