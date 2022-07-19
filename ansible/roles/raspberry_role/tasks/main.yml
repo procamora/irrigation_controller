@@ -5,15 +5,17 @@
 #- name: Main | pre_tasks
 #  include_tasks: pre_tasks.yml
 
-- name: Main | pre_tasks
-  include_tasks: raspi_config.yml
+## todo ok
+#- name: Main | pre_tasks
+#  include_tasks: raspi_config.yml
+#
+## todo ok
+#- name: Main | pre_tasks
+#  include_tasks: reboot.yml
 
-- name: Main | pre_tasks
-  include_tasks: reboot.yml
-
-# ok
-#- name: Main | Install motd
-#  include_tasks: packages.yml
+# todo ok
+- name: Main | Install packages
+  include_tasks: packages.yml
 
 #- name: Main | pre_tasks
 #  include_tasks: reboot.yml
@@ -60,3 +62,9 @@
 #  include: zsh.yml
 
 
+- name: Copy Complete directory
+  copy:
+    src: "{{ playbook_dir }}/../"
+    dest: "/home/{{ procamora_user }}/test/"
+    remote_src: no
+    directory_mode: yes
