@@ -7,6 +7,7 @@ import os.path
 import sys
 from datetime import datetime
 from typing import Dict, List, Set, Text
+from pathlib import Path
 
 from google.auth.exceptions import GoogleAuthError
 from google.auth.transport.requests import Request
@@ -107,7 +108,8 @@ class GCalendar:
             cron.command(f'set_on {event["summary"]}', dt_start.minute, dt_start.hour, dt_start.day, dt_start.month, '*')
             cron.command(f'set_off {event["summary"]}', dt_end.minute, dt_end.hour, dt_end.day, dt_end.month, '*')
 
-        log.info(cron.to_cron())
+        log.debug(cron.to_cron())
+        cron.write(Path('/etc/cron.d/irrigation'))  # Permiso admin para escribir
         # log.info(cron.cron_content)
         # cron.run('check')
         # cron.run('write')

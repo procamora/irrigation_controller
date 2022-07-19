@@ -31,3 +31,11 @@
 - name: Install specified python requirements
   ansible.builtin.pip:
     requirements: "/home/{{ procamora_user }}/irrigation_controller/requirements.txt"
+
+- name: Change permisssions cron.d for write group {{ procamora_user }}
+  ansible.builtin.file:
+    path: /etc/cron.d/
+    state: directory
+    mode: '0774'
+    owner: root
+    group: "{{ procamora_user }}"

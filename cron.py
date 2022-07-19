@@ -35,7 +35,7 @@ class Cron:
 
             cron = f'{minute} {hour} {day} {month} {week}'
             # log.info(cron)
-            self.commands.append(f'{cron}    {cmd}')
+            self.commands.append(f'{cron}   {self.user}  {cmd}')
 
     def to_cron(self) -> Text:
         working_path: Path = Path(__file__).resolve().parent
@@ -50,6 +50,18 @@ class Cron:
         # log.info(cmd)
         render: Text = template_row.render(commands=self.commands, user=self.user)
         return render
+
+    def write(self, file: Path):
+        new_cron: Text = self.to_cron()
+        if file.exists():  # si existe veo si hay diferencias para actualizarlo
+            if new_cron != file.read_text():
+                log.info('write cron')
+                file.write_text(new_cron)
+            else:
+                log.debug('same files cron')
+        else:
+            log.info('write cron')
+            file.write_text(new_cron)
 
     # @staticmethod
     # def generate_cmd(cron: Text, cmd: Text) -> Text:

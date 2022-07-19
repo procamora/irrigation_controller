@@ -19,8 +19,8 @@ from requests import exceptions
 from telebot import TeleBot, types, apihelper
 from terminaltables import AsciiTable
 
-from gcalendar import GCalendar
 from controller import Controller
+from gcalendar import GCalendar
 
 log: logging = get_logging(False, 'bot_irrigation')
 
@@ -70,6 +70,7 @@ calendar_id: Text = config_basic.get('CALENDAR_ID')
 
 controller: Controller = Controller()
 
+
 def get_markup_cmd() -> types.ReplyKeyboardMarkup:
     markup: types.ReplyKeyboardMarkup = types.ReplyKeyboardMarkup(one_time_keyboard=True)
     markup.row(my_commands[0])
@@ -83,6 +84,7 @@ def get_markup_zones() -> types.ReplyKeyboardMarkup:
     markup.row(controller.name_vegetable, controller.name_front, controller.name_back)
     # markup.row(my_commands[4])
     return markup
+
 
 def get_markup_zones2() -> types.ReplyKeyboardMarkup:
     markup: types.ReplyKeyboardMarkup = types.ReplyKeyboardMarkup(one_time_keyboard=True)
