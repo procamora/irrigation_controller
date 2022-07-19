@@ -10,11 +10,12 @@
     name: "{{ procamora_user }}"
     password: "{{ procamora_pass | password_hash('sha512') }}"
     shell: /bin/bash
-    groups: adm, dialout, sudo, plugdev
+    groups: adm, dialout, sudo, plugdev, gpio
     group: "{{ procamora_user }}"
     append: yes
     force: yes
     comment: "Default user"
+  register: _create_user
 
 - name: Main | Set user in sudoers
   lineinfile:

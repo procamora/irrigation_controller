@@ -57,9 +57,9 @@ class Controller:
 def main():
     controller: Controller = Controller()
     log.info(controller.get_status())
-    log.info(controller.set_zone(controller.zone_vegetable, True))
+    controller.set_zone(controller.zone_vegetable, True)
     log.info(controller.get_status())
-    log.info(controller.stop_all())
+    controller.stop_all()
     log.info(controller.get_status())
 
 

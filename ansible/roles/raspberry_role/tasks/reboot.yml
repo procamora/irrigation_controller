@@ -20,9 +20,9 @@
 
 - name: Post Tasks | Validating web port is open
   wait_for:
-    host: "{{ ansible_ssh_host }}"   # ip backuppc
+    host: "{{ ansible_ssh_host }}"
     port: 22
     delay: 10
     timeout: 30
     state: started
-    msg: "server web is not running"
+    msg: "server ssh is not running"
