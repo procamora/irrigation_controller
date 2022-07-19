@@ -13,7 +13,7 @@
     - do_i2c
     - do_serial
     - do_onewire
-    - do_overclock
+#    - do_overclock  # no usar, en la zero te sale una gui indicando que no se puede y bloquea
 
 - name: Set raspi-config
   shell: "raspi-config nonint {{ item.key }} {{ item.value }}"

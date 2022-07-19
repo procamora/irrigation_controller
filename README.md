@@ -13,8 +13,10 @@ chmod 700 /root/.ssh
 touch /root/.ssh/authorized_keys
 chmod 600 /root/.ssh/authorized_keys  # le quitamos los permisos necesarios
 
+# modificcar inventory con la ip de la rp
 
-
+cd ansible
+ansible-playbook -i inventory main.yml -v
 
 ```
 """commands

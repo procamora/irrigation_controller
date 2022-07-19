@@ -15,6 +15,7 @@ except RuntimeError:
                  "You can achieve this by using 'sudo' to run your script")
 
 
+# gpio readall  # bash
 # GPIO.setwarnings(False)
 
 @dataclass
@@ -27,11 +28,10 @@ class Controller:
     zone_back: int = 12
 
     def __post_init__(self):
-        # print(GPIO.RPI_INFO)
-        # GPIO.setmode(GPIO.BOARD)  # numeración exterior de los pines
-        # # self.gpio.setmode(gpio.BCM)  # numeración del chip BROADCOM
-        # GPIO.setup([self.zone_vegetable, self.zone_front, self.zone_back], GPIO.OUT, initial=GPIO.LOW)
-        pass
+        print(GPIO.RPI_INFO)
+        GPIO.setmode(GPIO.BOARD)  # numeración exterior de los pines
+        # self.gpio.setmode(gpio.BCM)  # numeración del chip BROADCOM
+        GPIO.setup([self.zone_vegetable, self.zone_front, self.zone_back], GPIO.OUT, initial=GPIO.LOW)
 
     def get_status(self) -> Dict[Text, bool]:
         return {
@@ -52,3 +52,16 @@ class Controller:
 
     def cleanup(self) -> NoReturn:
         GPIO.cleanup()
+
+
+def main():
+    controller: Controller = Controller()
+    log.info(controller.get_status())
+    log.info(controller.set_zone(controller.zone_vegetable, True))
+    log.info(controller.get_status())
+    log.info(controller.stop_all())
+    log.info(controller.get_status())
+
+
+if __name__ == '__main__':
+    main()
