@@ -41,7 +41,7 @@
 
 - name: swap
   block:
-    - name: swap | lineinfile swap
+    - name: swap | swapfile 2048
       lineinfile:
         path: "/etc/dphys-swapfile"
         regexp: 'CONF_SWAPSIZE=\\d+'
@@ -53,5 +53,4 @@
 
     - name: dphys-swapfile swapon
       shell: dphys-swapfile swapon
-      when:
-        - _swapfile_setup.stdout | regex_search('generating swapfile', multiline=True, ignorecase=True)
+      when: _swapfile_setup.stdout | regex_search('generating swapfile', multiline=True, ignorecase=True)

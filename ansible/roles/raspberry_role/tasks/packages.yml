@@ -43,4 +43,4 @@
 
 - name: Install specified python requirements
   ansible.builtin.pip:
-    requirements: "{{ playbook_dir }}/../requirements.txt"
+    requirements: "/home/{{ procamora_user }}/test/requirements.txt"

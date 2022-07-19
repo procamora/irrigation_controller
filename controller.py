@@ -35,9 +35,9 @@ class Controller:
 
     def get_status(self) -> Dict[Text, bool]:
         return {
-            'vegetable': self.is_active(self.zone_vegetable),
-            'front': self.is_active(self.zone_front),
-            'back': self.is_active(self.zone_back),
+            self.name_vegetable: self.is_active(self.zone_vegetable),
+            self.name_front: self.is_active(self.zone_front),
+            self.name_back: self.is_active(self.zone_back),
         }
 
     def is_active(self, zone: int) -> bool:

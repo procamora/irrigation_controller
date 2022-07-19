@@ -1,0 +1,27 @@
+---
+
+- name: Main | Create main group
+  group:
+    name: "{{ procamora_user }}"
+    state: present
+
+- name: Main | Create main user
+  user:
+    name: "{{ procamora_user }}"
+    password: "{{ procamora_pass | password_hash('sha512') }}"
+    shell: /bin/bash
+    groups: adm, dialout, sudo, plugdev
+    group: "{{ procamora_user }}"
+    append: yes
+    force: yes
+    comment: "Default user"
+
+- name: Main | Set user in sudoers
+  lineinfile:
+    path: "/etc/sudoers.d/{{ procamora_user }}"
+    state: present
+    regexp: '^{{ procamora_user }}'
+    line: '{{ procamora_user }} ALL=(ALL) NOPASSWD: ALL'
+    backrefs: no
+    create: yes
+    validate: 'visudo -cf %s'

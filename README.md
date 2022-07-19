@@ -2,21 +2,26 @@
 Project to create an irrigation controller bot
 
 
+preparar ssh para conexion con ansible
 
-CREAR KEY SSH
+```bash
+sudo mkdir -p /root/.ssh
+sudo chmod 700 /root/.ssh
 
-eval "$(ssh-agent -s)"
+sudo touch /root/.ssh/authorized_keys
+sudo chmod 600 /root/.ssh/authorized_keys  # le quitamos los permisos necesarios
+echo "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAAAgQDXEcpTAqxQemrkIpEX45ylTLsPhDgko6Qugfv6B1/cioLaeXtI03NgKKMcWv4yMmKMLvJg4adxkEjpn/5IKEA13ljCMZ+Ue29Su+oOYSU8bo3bLlm+h5hvVJeso0irdnrqILNgL4yw38ebmC8IZaKBhiwiGD8sT/LD9VZSqaxnbQ== key used for automation service connections" | sudo tee /root/.ssh/authorized_keys
+```
 
-mkdir -p /root/.ssh
-chmod 700 /root/.ssh
-
-touch /root/.ssh/authorized_keys
-chmod 600 /root/.ssh/authorized_keys  # le quitamos los permisos necesarios
 
 # modificcar inventory con la ip de la rp
 
+```bash
 cd ansible
 ansible-playbook -i inventory main.yml -v
+```
+
+
 
 ```
 """commands
