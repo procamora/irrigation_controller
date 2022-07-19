@@ -41,6 +41,3 @@
         cache_valid_time: 3600
   when: ansible_os_family == 'Debian'
 
-- name: Install specified python requirements
-  ansible.builtin.pip:
-    requirements: "/home/{{ procamora_user }}/test/requirements.txt"

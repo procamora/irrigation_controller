@@ -46,3 +46,22 @@
 #    remote_src: no
 #    directory_mode: yes
 
+# https://docs.ansible.com/ansible/latest/collections/community/general/archive_module.html
+- name: Create a tar.gz archive of a single file.
+  community.general.archive:
+    path: "{{ playbook_dir }}/../"
+    dest: /tmp/irrigation.tar.gz
+    format: gz
+    force_archive: true
+
+
+- name: Extract foo.tgz into /var/lib/foo
+  ansible.builtin.unarchive:
+    src: /tmp/irrigation.tar.gz
+    dest: "/home/{{ procamora_user }}/irrigation_controller/"
+#    remote_src: yes
+    owner: "{{ procamora_user }}"
+
+- name: Install specified python requirements
+  ansible.builtin.pip:
+    requirements: "/home/{{ procamora_user }}/test/requirements.txt"
