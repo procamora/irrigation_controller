@@ -16,11 +16,6 @@
       include_vars:
         file: "{{ playbook_dir }}/vars_secrets.yml"
 
-#    - name: Main | Check is defined var endpoints
-#      fail:
-#        msg: "The variable endpoints is not defined"
-#      when: endpoints is not defined
-
   tasks:
     - include_role:
         name: raspberry_role

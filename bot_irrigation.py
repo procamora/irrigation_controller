@@ -9,7 +9,6 @@
 import configparser
 import os
 import signal
-import subprocess
 import sys
 import threading
 import time
@@ -22,6 +21,7 @@ from telebot import TeleBot, types, apihelper
 from terminaltables import AsciiTable
 
 from controller import Controller
+from cron import Cron
 from gcalendar import GCalendar
 
 log: logging = get_logging(False, 'bot_irrigation')
@@ -34,6 +34,7 @@ BOT_TOKEN = 1069111113:AAHOk9K5TAAAAAAAAAAIY1OgA_LNpAAAAA
 DEBUG = 0
 DELAY = 30
 CALENDAR_ID = sdfdsfsdf@group.calendar.google.com
+NUM_EVENTS = 30
 
 [DEBUG]
 ADMIN = 111111
@@ -46,6 +47,7 @@ my_commands: Tuple[Text, ...] = (
     '/get',  # 1
     '/set',  # 2
     '/off',  # 3
+    '/regresh',  # 3
     '/help'  # -2
     '/exit',  # -1
 )
@@ -77,13 +79,20 @@ def get_markup_cmd() -> types.ReplyKeyboardMarkup:
     markup: types.ReplyKeyboardMarkup = types.ReplyKeyboardMarkup(one_time_keyboard=True)
     markup.row(my_commands[0])
     markup.row(my_commands[1], my_commands[2], my_commands[3])
-    # markup.row(my_commands[4])
+    markup.row(my_commands[4])
     return markup
 
 
 def get_markup_zones() -> types.ReplyKeyboardMarkup:
     markup: types.ReplyKeyboardMarkup = types.ReplyKeyboardMarkup(one_time_keyboard=True)
     markup.row(controller.name_vegetable, controller.name_front, controller.name_back)
+    # markup.row(my_commands[4])
+    return markup
+
+
+def get_markup_status() -> types.ReplyKeyboardMarkup:
+    markup: types.ReplyKeyboardMarkup = types.ReplyKeyboardMarkup(one_time_keyboard=True)
+    markup.row("ON", "OFF")
     # markup.row(my_commands[4])
     return markup
 
@@ -207,21 +216,21 @@ def command_system(message: types.Message) -> NoReturn:
     return  # solo esta puesto para que no falle la inspeccion de codigo
 
 
-@bot.message_handler(func=lambda message: message.chat.id == owner_bot, commands=['exit'])
+@bot.message_handler(func=lambda message: message.chat.id == owner_bot, commands=[my_commands[-1][1:]])
 def send_exit(message: types.Message) -> NoReturn:
     bot.send_message(message, "Nothing", reply_markup=get_markup_cmd())
     return
 
 
-@bot.message_handler(func=lambda message: message.chat.id == owner_bot, commands=['status'])
+@bot.message_handler(func=lambda message: message.chat.id == owner_bot, commands=[my_commands[0][1:]])
 def send_status(message: types.Message) -> NoReturn:
     # response: Text = select_hosts_offline(lock)
     update = list([['Zone', 'Status']])
     # for i in response:
     # update.append((i.ip, i.description, i.vendor))
-    update.append(('A', 'Down'))
-    update.append(('B', 'Down'))
-    update.append(('C', 'Down'))
+    update.append((controller.name_vegetable, controller.is_active(controller.pin_vegetable)))
+    update.append((controller.name_front, controller.is_active(controller.pin_vegetable)))
+    update.append((controller.name_back, controller.is_active(controller.pin_vegetable)))
 
     table: AsciiTable = AsciiTable(update)
     table.justify_columns = {0: 'center', 1: 'center'}
@@ -229,34 +238,65 @@ def send_status(message: types.Message) -> NoReturn:
     return
 
 
-@bot.message_handler(func=lambda message: message.chat.id == owner_bot, commands=['get'])
+@bot.message_handler(func=lambda message: message.chat.id == owner_bot, commands=[my_commands[1][1:]])
 def send_get(message: types.Message) -> NoReturn:
     bot.reply_to(message, "zone???", reply_markup=get_markup_zones2())
-    # bot.register_next_step_handler(message, check_port, zone='aadsasd')
+    bot.register_next_step_handler(message, check_port, action='get')
     return
 
 
-@bot.message_handler(func=lambda message: message.chat.id == owner_bot, commands=['set'])
+@bot.message_handler(func=lambda message: message.chat.id == owner_bot, commands=[my_commands[2][1:]])
 def send_set(message: types.Message) -> NoReturn:
     bot.reply_to(message, "zone???", reply_markup=get_markup_zones())
-    bot.register_next_step_handler(message, check_port, zone='aadsasd')
+    bot.register_next_step_handler(message, set_status_zone, action='set')
     return
 
 
-def check_port(message: types.Message, zone: Text) -> NoReturn:
+def set_status_zone(message: types.Message, action: Text) -> NoReturn:
     if is_response_command(message):
         return
 
-    bot.reply_to(message, f'set_on => {message.text}', reply_markup=get_markup_cmd())
+    bot.reply_to(message, "status???", reply_markup=get_markup_status())
+    bot.register_next_step_handler(message, check_port, action=action, other=message.text)
 
 
-@bot.message_handler(func=lambda message: message.chat.id == owner_bot, commands=['off'])
+def check_port(message: types.Message, action: Text, other: Text = None) -> NoReturn:
+    if is_response_command(message):
+        return
+
+    if action == 'get':
+        pin_zone: int = controller.get_pin_zone(message.text)
+        status_zone: bool = controller.is_active(pin_zone)
+        bot.reply_to(message, f'get({message.text}) => {status_zone}', reply_markup=get_markup_cmd())
+    elif action == 'set':
+        controller.set_pin_zone(zone=0, state=(message.text.lower() == 'on'), name=other)
+        bot.reply_to(message, f'set({message.text}) => {other}', reply_markup=get_markup_cmd())
+        send_status(message)
+    else:
+        bot.reply_to(message, f'uknown action => {action}', reply_markup=get_markup_cmd())
+
+
+@bot.message_handler(func=lambda message: message.chat.id == owner_bot, commands=[my_commands[3][1:]])
 def send_off(message: types.Message) -> NoReturn:
     send_status(message)
     bot.reply_to(message, "closed all relays", reply_markup=get_markup_cmd())
     # TODO parar todos los reles
     controller.stop_all()
     send_status(message)
+    return
+
+
+@bot.message_handler(func=lambda message: message.chat.id == owner_bot, commands=[my_commands[4][1:]])
+def send_refresh(message: types.Message) -> NoReturn:
+    try:
+        log.info('get calendar and update cron')
+        get_events(GCalendar(), int(config_basic.get('NUM_EVENTS')))
+        bot.reply_to(message, "update calendars and cron", reply_markup=get_markup_cmd())
+    except Exception as err:
+        log.error(f'[-] Error: {err}')
+        bot.send_message(owner_bot, f'[-] Error GCalendar: {err}', reply_markup=get_markup_cmd())
+        os.kill(os.getpid(), signal.SIGUSR1)
+        log.warning('llego??')
     return
 
 
@@ -275,28 +315,10 @@ def handler_others(message: types.Message) -> NoReturn:
     return
 
 
-def format_text(param_text: bytes) -> Text:
-    """
-    Metodo para formatear codigo, es usado para formatear las salidas de las llamadas al sistema
-    :param param_text:
-    :return:
-    """
-    if param_text is not None:
-        text = param_text.decode('utf-8')
-        return str(text)
-    return ''  # Si es None retorno string vacio
-
-
-def execute_command(command: Text) -> Tuple[Text, Text, subprocess.Popen]:
-    """
-    Metodo que realiza una llamada al sistema para ejecutar un comando
-    :param command:
-    :return:
-    """
-    # FIXME CAMBIAR Popen por run
-    execute = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    stdout, stderr = execute.communicate()
-    return format_text(stdout), format_text(stderr), execute
+def get_events(calendar: GCalendar, num_events: int):
+    cron: Cron = calendar.get_irrigation(calendar_id, num_events)
+    if cron is not None:
+        cron.write(Path('/etc/cron.d/irrigation'))  # Permiso admin para escribir
 
 
 def daemon_gcalendar() -> NoReturn:
@@ -314,6 +336,7 @@ def daemon_gcalendar() -> NoReturn:
         sys.exit(1)  # creo que no tiene efecto, pero es para el validador semantico
 
     delay: int = int(config_basic.get('DELAY'))
+    num_events: int = int(config_basic.get('NUM_EVENTS'))
 
     # iteration: int = 0
     while True:
@@ -323,8 +346,8 @@ def daemon_gcalendar() -> NoReturn:
             # if iteration % 5 == 0:  # scan avanzado que ejecutamos 1 de cada 5 escaneos
             log.info('get calendar and update cron')
             # calendar.get_calendar_list()
-            calendar.irrigation(calendar_id)
-            execute_command('sudo systemctl restart crond')
+            get_events(calendar, num_events)
+
         except Exception as e:
             log.error(f'Fail thread: {e}')
             bot.send_message(owner_bot, f'[-] Error thread: {e}', reply_markup=get_markup_cmd())

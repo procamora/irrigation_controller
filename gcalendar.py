@@ -69,7 +69,7 @@ class GCalendar:
             if not page_token:
                 break
 
-    def irrigation(self, calendar_id: Text, num_events: 30):
+    def get_irrigation(self, calendar_id: Text, num_events: 30) -> Optional[Cron]:
         log.info(self.service)
         # Call the Calendar API
         now: Text = datetime.utcnow().isoformat() + 'Z'  # 'Z' indicates UTC time
@@ -81,7 +81,7 @@ class GCalendar:
                                                          orderBy='startTime').execute()
         if not events_result['items']:
             log.warning('No upcoming events found.')
-            return
+            return None
 
         cron = Cron(user='procamora')
         cron.command(f'# Verify service active')
@@ -110,8 +110,9 @@ class GCalendar:
             cron.command(f'set_on {event["summary"]}', dt_start.minute, dt_start.hour, dt_start.day, dt_start.month, '*')
             cron.command(f'set_off {event["summary"]}', dt_end.minute, dt_end.hour, dt_end.day, dt_end.month, '*')
 
-        log.debug(cron.to_cron())
-        cron.write(Path('/etc/cron.d/irrigation'))  # Permiso admin para escribir
+        # log.debug(cron.to_cron())
+        # cron.write(Path('/etc/cron.d/irrigation'))  # Permiso admin para escribir
+        return cron
         # log.info(cron.cron_content)
         # cron.run('check')
         # cron.run('write')
@@ -125,7 +126,7 @@ class GCalendar:
 def main():
     calendar = GCalendar()
     # calendar.get_calendar_list()
-    calendar.irrigation('<CALENDAR_ID>')
+    calendar.get_irrigation('<CALENDAR_ID>')
 
 
 if __name__ == '__main__':

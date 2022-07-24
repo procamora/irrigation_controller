@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+import subprocess
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Text, List, NoReturn, Any
@@ -51,18 +52,37 @@ class Cron:
         render: Text = template_row.render(commands=self.commands, user=self.user)
         return render
 
-    def write(self, file: Path):
+    def write(self, file: Path) -> bool:
         new_cron: Text = self.to_cron()
         if file.exists():  # si existe veo si hay diferencias para actualizarlo
             if new_cron != file.read_text():
                 log.info('write cron')
                 file.write_text(new_cron)
+                return True
             else:
                 log.debug('same files cron')
+                return False
         else:
             log.info('write cron')
             file.write_text(new_cron)
+            return True
 
-    # @staticmethod
-    # def generate_cmd(cron: Text, cmd: Text) -> Text:
-    #     return
+    @staticmethod
+    def format_text(param_text: bytes) -> Text:
+        """
+        Metodo para formatear codigo, es usado para formatear las salidas de las llamadas al sistema
+        :param param_text:
+        :return:
+        """
+        if param_text is not None:
+            text = param_text.decode('utf-8')
+            return str(text)
+        return ''  # Si es None retorno string vacio
+
+    @staticmethod
+    def restart_systemd():
+        command: Text = 'sudo systemctl restart cron'
+        execute = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        stdout, stderr = execute.communicate()
+        log.debug(f'{Cron.format_text(stdout)}')
+        log.debug(f'{Cron.format_text(stderr)}')
