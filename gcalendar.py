@@ -11,7 +11,7 @@ from google.auth.exceptions import GoogleAuthError
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
-from googleapiclient.discovery import build, Resource
+from googleapiclient.discovery import build
 from procamora_utils.logger import get_logging, logging
 
 from cron import Cron
@@ -19,6 +19,7 @@ from cron import Cron
 log: logging = get_logging(True, 'calendar')
 
 
+# https://developers.google.com/calendar/api/quickstart/python
 def auth() -> Credentials:
     # If modifying these scopes, delete the file token.json.
     scopes: List[Text] = [
@@ -68,15 +69,14 @@ class GCalendar:
             if not page_token:
                 break
 
-    def irrigation(self, calendar_id: Text):
+    def irrigation(self, calendar_id: Text, num_events: 30):
         log.info(self.service)
         # Call the Calendar API
-        now = datetime.utcnow().isoformat() + 'Z'  # 'Z' indicates UTC time
-        log.info(type(now))
-        log.info('Getting the upcoming 10 events')
+        now: Text = datetime.utcnow().isoformat() + 'Z'  # 'Z' indicates UTC time
+        log.info(f'Getting the upcoming {num_events} events')
         events_result: Dict = self.service.events().list(calendarId=calendar_id,
                                                          timeMin=now,
-                                                         maxResults=20,
+                                                         maxResults=num_events,
                                                          singleEvents=True,
                                                          orderBy='startTime').execute()
         if not events_result['items']:
@@ -84,14 +84,15 @@ class GCalendar:
             return
 
         cron = Cron(user='procamora')
-        cron.command(f'# Backup closed if open relay')
+        cron.command(f'# Verify service active')
+        cron.command(
+            f'sudo systemctl -q is-active mio_bot_irrigation.service && echo YES || sudo systemctl restart mio_bot_irrigation.service',
+            '*/10', '*', '*', '*', '*')
+        cron.command(f'# Backup closed if open relay at sun day')
         cron.command(f'set_off ZONA1', 0, 9, '*', '*', '*')
         cron.command(f'set_off ZONA2', 0, 9, '*', '*', '*')
         cron.command(f'set_off ZONA3', 0, 9, '*', '*', '*')
         #  /home/pi/tg/bin/telegram-cli -e 'msg domotica_pablo "/modo_automatico on 23"' >/tmp/tg_on.log 2>/tmp/tg_on_err.log
-        cron.command(
-            f'sudo systemctl -q is-active mio_bot_irrigation.service && echo YES || sudo systemctl restart mio_bot_irrigation.service',
-            '*/10', '*', '*', '*', '*')
         cron.command(f'# Zones')
 
         # Prints the start and name of the next 10 events
