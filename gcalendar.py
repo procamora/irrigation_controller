@@ -107,8 +107,10 @@ class GCalendar:
             dt_start: datetime = datetime.fromisoformat(event['start'].get('dateTime'))
             dt_end: datetime = datetime.fromisoformat(event['end'].get('dateTime'))
 
-            cron.command(f'set_on {event["summary"]}', dt_start.minute, dt_start.hour, dt_start.day, dt_start.month, '*')
-            cron.command(f'set_off {event["summary"]}', dt_end.minute, dt_end.hour, dt_end.day, dt_end.month, '*')
+            cron.command(f'python3 ~/irrigation_controller/controller_cli.py -z {event["summary"]} -a',
+                         dt_start.minute, dt_start.hour, dt_start.day, dt_start.month, '*')
+            cron.command(f'python3 ~/irrigation_controller/controller_cli.py -z {event["summary"]} -na',
+                         dt_end.minute, dt_end.hour, dt_end.day, dt_end.month, '*')
 
         # log.debug(cron.to_cron())
         # cron.write(Path('/etc/cron.d/irrigation'))  # Permiso admin para escribir
