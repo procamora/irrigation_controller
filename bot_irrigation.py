@@ -47,7 +47,7 @@ my_commands: Tuple[Text, ...] = (
     '/get',  # 1
     '/set',  # 2
     '/off',  # 3
-    '/regresh',  # 3
+    '/refresh',  # 3
     '/help'  # -2
     '/exit',  # -1
 )
@@ -224,15 +224,13 @@ def send_exit(message: types.Message) -> NoReturn:
 
 @bot.message_handler(func=lambda message: message.chat.id == owner_bot, commands=[my_commands[0][1:]])
 def send_status(message: types.Message) -> NoReturn:
-    # response: Text = select_hosts_offline(lock)
-    update = list([['Zone', 'Status']])
-    # for i in response:
-    # update.append((i.ip, i.description, i.vendor))
-    update.append((controller.name_vegetable, controller.is_active(controller.pin_vegetable)))
-    update.append((controller.name_front, controller.is_active(controller.pin_vegetable)))
-    update.append((controller.name_back, controller.is_active(controller.pin_vegetable)))
+    response = list([['Zone', 'Status']])
+    zones = controller.get_status()
+    log.debug(zones.items())
+    for zone in zones.items():
+        response.append(zone)
 
-    table: AsciiTable = AsciiTable(update)
+    table: AsciiTable = AsciiTable(response)
     table.justify_columns = {0: 'center', 1: 'center'}
     send_message_safe(message, str(table.table))
     return
