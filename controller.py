@@ -21,7 +21,10 @@ class GPIO_FAKE:
     def setmode(self, asd):
         pass
 
-    def setup(self, a, b, initial):
+    def setwarnings(self, asd):
+        pass
+
+    def setup(self, a, b):
         pass
 
     def input(self, a):
@@ -59,9 +62,12 @@ class Controller:
 
     def __post_init__(self):
         print(GPIO.RPI_INFO)
+        # GPIO.setwarnings(False)
         GPIO.setmode(GPIO.BOARD)  # numeración exterior de los pines (11)
         # self.gpio.setmode(gpio.BCM)  # numeración del chip BROADCOM (GPIO17)
-        GPIO.setup([self.pin_vegetable, self.pin_front, self.pin_back], GPIO.OUT, initial=GPIO.LOW)
+        # initial no se puede poner, porque si no cada vez que se instancia controller se ponen todos a false
+        # GPIO.setup([self.pin_vegetable, self.pin_front, self.pin_back], GPIO.OUT, initial=GPIO.LOW)
+        GPIO.setup([self.pin_vegetable, self.pin_front, self.pin_back], GPIO.OUT)
 
     def get_status(self) -> Dict[Text, bool]:
         return {
