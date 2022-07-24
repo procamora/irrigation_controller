@@ -47,13 +47,13 @@
 - name: Main | irrigation
   include_tasks: irrigation.yml
 
-
-- name: Post Tasks | Force Reboot if change main user
-  reboot:
-    msg: "Reboot initiated by Ansible for kernel updates"
-    connect_timeout: 5
-    reboot_timeout: 300
-    pre_reboot_delay: 0
-    post_reboot_delay: 30
-    test_command: uptime
-  when: _create_user.changed
+#
+#- name: Post Tasks | Force Reboot if change main user
+#  reboot:
+#    msg: "Reboot initiated by Ansible for kernel updates"
+#    connect_timeout: 5
+#    reboot_timeout: 300
+#    pre_reboot_delay: 0
+#    post_reboot_delay: 30
+#    test_command: uptime
+#  when: _create_user.changed

@@ -7,6 +7,8 @@
 
 
 import configparser
+import os
+import signal
 import subprocess
 import sys
 import threading
@@ -303,11 +305,13 @@ def daemon_gcalendar() -> NoReturn:
     :return:
     """
     try:
-        calendar = GCalendar()
+        calendar: GCalendar = GCalendar()
     except Exception as err:
         log.error(f'[-] Error: {err}')
-        bot.send_message(owner_bot, f'Fail GCalendar: {err}', reply_markup=get_markup_cmd())
-        sys.exit(1)
+        bot.send_message(owner_bot, f'[-] Error GCalendar: {err}', reply_markup=get_markup_cmd())
+        os.kill(os.getpid(), signal.SIGUSR1)
+        log.warning('llego??')
+        sys.exit(1)  # creo que no tiene efecto, pero es para el validador semantico
 
     delay: int = int(config_basic.get('DELAY'))
 
@@ -319,11 +323,11 @@ def daemon_gcalendar() -> NoReturn:
             # if iteration % 5 == 0:  # scan avanzado que ejecutamos 1 de cada 5 escaneos
             log.info('get calendar and update cron')
             # calendar.get_calendar_list()
-            calendar.other(calendar_id)
+            calendar.irrigation(calendar_id)
             execute_command('sudo systemctl restart crond')
         except Exception as e:
             log.error(f'Fail thread: {e}')
-            bot.send_message(owner_bot, f'Fail thread: {e}', reply_markup=get_markup_cmd())
+            bot.send_message(owner_bot, f'[-] Error thread: {e}', reply_markup=get_markup_cmd())
 
         # iteration += 1
 
