@@ -34,6 +34,7 @@
           - raspberrypi-kernel
           - raspberrypi-kernel-headers
           - atop
+          - firewalld
         # - auditd
         # - ntp
         state: latest

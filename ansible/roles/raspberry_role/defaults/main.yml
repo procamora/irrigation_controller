@@ -6,3 +6,7 @@
 #path_custom_worspace: /opt/custom_workspace
 config_system_locale: 'en_US.UTF-8'
 config_system_language: 'en_US.UTF-8'
+
+default_interface: eth0  # firewalld
+default_zone: internal  # firewalld
+default_zone_trusted: trusted  # firewalld

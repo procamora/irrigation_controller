@@ -21,12 +21,10 @@
   include_tasks: reboot.yml
 
 #- name: Main | Install Filebeat
-#  include: filebeat.yml
+#  include_tasks: filebeat.yml
 
-#- name: Main | Configure firewalld
-#  include: firewalld.yml
-#  when:
-#    - ansible_os_family == 'RedHat'
+- name: Main | Configure firewalld
+  include_tasks: firewalld.yml
 
 - name: Main | user
   include_tasks: user.yml
@@ -36,7 +34,7 @@
 #  include_tasks: motd.yml
 
 #- name: Main | Install custom_workspace
-#  include: zsh.yml
+#  include_tasks: zsh.yml
 
 
 #- name: Copy Complete directory
@@ -50,7 +48,7 @@
   include_tasks: irrigation.yml
 
 
-- name: Post Tasks | Reboot if change main user
+- name: Post Tasks | Force Reboot if change main user
   reboot:
     msg: "Reboot initiated by Ansible for kernel updates"
     connect_timeout: 5
