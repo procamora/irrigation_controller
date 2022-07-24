@@ -302,7 +302,13 @@ def daemon_gcalendar() -> NoReturn:
     Demonio que va comprobando si tiene que ejecutarse un recordatorio
     :return:
     """
-    calendar = GCalendar()
+    try:
+        calendar = GCalendar()
+    except Exception as err:
+        log.error(f'[-] Error: {err}')
+        bot.send_message(owner_bot, f'Fail GCalendar: {err}', reply_markup=get_markup_cmd())
+        sys.exit(1)
+
     delay: int = int(config_basic.get('DELAY'))
 
     # iteration: int = 0
@@ -326,7 +332,7 @@ def daemon_gcalendar() -> NoReturn:
 
 
 def main():
-    d = threading.Thread(target=daemon_gcalendar, name='scan_network')
+    d = threading.Thread(target=daemon_gcalendar, name='irrigation_controler_daemon')
     d.setDaemon(True)
     d.start()
 
