@@ -18,6 +18,7 @@ echo "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAAAgQDXEcpTAqxQemrkIpEX45ylTLsPhDgko6Qugf
 
 ```bash
 cd ansible
+ansible-galaxy collection install community.general
 ansible-playbook -i inventory main.yml -v
 ```
 

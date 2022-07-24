@@ -1,41 +1,53 @@
 ---
 
 # https://docs.ansible.com/ansible/latest/collections/community/general/archive_module.html
-- name: Create a tar.gz archive of a single file.
+- name: Irrigation | Create a {{ repo_tar }} in localhost
   community.general.archive:
     path: "{{ playbook_dir }}/../"
-    dest: /tmp/irrigation.tar.gz
+    dest: "/tmp/{{ repo_tar }}"
     format: gz
     force_archive: true
   delegate_to: localhost
 
-- name: Create directory irrigation_controller
+- name: Irrigation | Create directory irrigation_controller
   file:
-    path: "/home/{{ procamora_user }}/irrigation_controller/"
+    path: "{{ irrigation_path }}/"
     state: directory
 
-
-- name: Extract foo.tgz into /var/lib/foo
+- name: Irrigation | Extract irrigation.tar.gz into /home
   ansible.builtin.unarchive:
-    src: /tmp/irrigation.tar.gz
-    dest: "/home/{{ procamora_user }}/irrigation_controller/"
+    src: "/tmp/{{ repo_tar }}"
+    dest: "{{ irrigation_path }}/"
     remote_src: no
     owner: "{{ procamora_user }}"
 
-- name: Detete /tmp/irrigation.tar.gz
+- name: Irrigation | Detete {{ repo_tar }} in localhost
   file:
-    path: /tmp/irrigation.tar.gz
+    path: "/tmp/{{ repo_tar }}"
     state: absent
   delegate_to: localhost
 
-- name: Install specified python requirements
+- name: Irrigation | Install specified python requirements
   ansible.builtin.pip:
-    requirements: "/home/{{ procamora_user }}/irrigation_controller/requirements.txt"
+    requirements: "{{ irrigation_path }}/requirements.txt"
 
-- name: Change permisssions cron.d for write group {{ procamora_user }}
+- name: Irrigation | Change permisssions /etc/cron.d/ for write group {{ procamora_user }}
   ansible.builtin.file:
     path: /etc/cron.d/
     state: directory
     mode: '0774'
     owner: root
     group: "{{ procamora_user }}"
+
+- name: Irrigation | Copy service in systemd
+  template:
+    src: mio_bot_irrigation.service
+    dest: /lib/systemd/system/mio_bot_irrigation.service
+    mode: 0644
+
+- name: Irrigation | Restart service mio_bot_irrigation.service, also issue daemon-reload to pick up config changes
+  ansible.builtin.systemd:
+    state: restarted
+    daemon_reload: yes
+    enabled: yes
+    name: mio_bot_irrigation.service
