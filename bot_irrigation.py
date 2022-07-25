@@ -320,7 +320,15 @@ def handler_others(message: types.Message) -> NoReturn:
 def get_events(calendar: GCalendar, num_events: int):
     cron: Cron = calendar.get_irrigation(calendar_id, num_events)
     if cron is not None:
-        cron.write(Path('/etc/cron.d/irrigation'))  # Permiso admin para escribir
+        write: bool
+        stdout: Text
+        stderr: Text
+        write, stdout, stderr = cron.write(Path('/etc/cron.d/irrigation'))  # Permiso admin para escribir
+        if write:
+            if len(stderr) != 0:
+                bot.send_message(owner_bot, f'[+] stderr: {stderr}', reply_markup=get_markup_cmd())
+            if len(stdout) != 0:
+                bot.send_message(owner_bot, f'[+] stdout: {stdout}', reply_markup=get_markup_cmd())
 
 
 def daemon_gcalendar() -> NoReturn:
@@ -349,7 +357,6 @@ def daemon_gcalendar() -> NoReturn:
             log.info('get calendar and update cron')
             # calendar.get_calendar_list()
             get_events(calendar, num_events)
-
         except Exception as e:
             log.error(f'Fail thread: {e}')
             bot.send_message(owner_bot, f'[-] Error thread: {e}', reply_markup=get_markup_cmd())

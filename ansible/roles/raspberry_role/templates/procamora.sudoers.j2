@@ -1,0 +1,6 @@
+#procamora ALL=(ALL) NOPASSWD: ALL
+
+Cmnd_Alias IRRIGATION = /usr/bin/systemctl restart mio_bot_irrigation.service, /usr/bin/systemctl restart cron.service, /bin/tee /etc/cron.d/irrigation
+
+{{ procamora_user }} ALL = NOPASSWD: IRRIGATION
+#procamora ALL = NOPASSWD: /bin/sudo -v

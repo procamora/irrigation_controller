@@ -31,13 +31,13 @@
   ansible.builtin.pip:
     requirements: "{{ irrigation_path }}/requirements.txt"
 
-- name: Irrigation | Change permisssions /etc/cron.d/ for write group {{ procamora_user }}
-  ansible.builtin.file:
-    path: /etc/cron.d/
-    state: directory
-    mode: '0774'
-    owner: root
-    group: "{{ procamora_user }}"
+#- name: Irrigation | Change permisssions /etc/cron.d/ for write group {{ procamora_user }}
+#  ansible.builtin.file:
+#    path: /etc/cron.d/
+#    state: directory
+#    mode: '0774'
+#    owner: root
+#    group: "{{ procamora_user }}"
 
 - name: Irrigation | Copy service in systemd
   template:

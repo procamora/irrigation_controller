@@ -4,7 +4,7 @@
 import subprocess
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Text, List, NoReturn, Any
+from typing import Text, List, NoReturn, Any, Tuple
 
 import jinja2
 from procamora_utils.logger import get_logging, logging
@@ -52,20 +52,22 @@ class Cron:
         render: Text = template_row.render(commands=self.commands, user=self.user)
         return render
 
-    def write(self, file: Path) -> bool:
+    def write(self, file: Path) -> Tuple[bool, Text, Text]:
         new_cron: Text = self.to_cron()
         if file.exists():  # si existe veo si hay diferencias para actualizarlo
             if new_cron != file.read_text():
-                log.info('write cron')
-                file.write_text(new_cron)
-                return True
+                log.info(f'update cron, original_size:{len(file.read_text())}, new_size:{len(new_cron)}')
+                # file.write_text(new_cron)  # no quiero ejecutar como root el script, tee esta en sudoers sin password
+                stdout, stderr = self.sudo_tee_cron(new_cron, file)
+                return True, stdout, stderr
             else:
                 log.debug('same files cron')
-                return False
+                return False, '', ''
         else:
-            log.info('write cron')
-            file.write_text(new_cron)
-            return True
+            log.info('create cron')
+            # file.write_text(new_cron)  # no quiero ejecutar como root el script, tee esta en sudoers sin password
+            stdout, stderr = self.sudo_tee_cron(new_cron, file)
+            return True, stdout, stderr
 
     @staticmethod
     def format_text(param_text: bytes) -> Text:
@@ -80,9 +82,18 @@ class Cron:
         return ''  # Si es None retorno string vacio
 
     @staticmethod
-    def restart_systemd():
-        command: Text = 'sudo systemctl restart cron'
+    def sudo_tee_cron(content: Text, path: Path) -> Tuple[Text, Text]:
+        command: Text = f'echo "{content}" | sudo /bin/tee {str(path)} >/dev/null'
         execute = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         stdout, stderr = execute.communicate()
-        log.debug(f'{Cron.format_text(stdout)}')
-        log.debug(f'{Cron.format_text(stderr)}')
+        log.debug(f'stdout: {Cron.format_text(stdout)}')
+        log.debug(f'stderr: {Cron.format_text(stderr)}')
+        return Cron.format_text(stdout), Cron.format_text(stderr)
+
+    @staticmethod
+    def sudo_restart_cron():
+        command: Text = 'sudo /usr/bin/systemctl restart cron.service'
+        execute = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        stdout, stderr = execute.communicate()
+        log.debug(f'stdout: {Cron.format_text(stdout)}')
+        log.debug(f'stderr: {Cron.format_text(stderr)}')

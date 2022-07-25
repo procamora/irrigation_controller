@@ -89,9 +89,9 @@ class GCalendar:
             f'sudo systemctl -q is-active mio_bot_irrigation.service && echo YES || sudo systemctl restart mio_bot_irrigation.service',
             '*/10', '*', '*', '*', '*')
         cron.command(f'# Backup closed if open relay at sun day')
-        cron.command(f'set_off ZONA1', 0, 9, '*', '*', '*')
-        cron.command(f'set_off ZONA2', 0, 9, '*', '*', '*')
-        cron.command(f'set_off ZONA3', 0, 9, '*', '*', '*')
+        cron.command(f'python3 ~/irrigation_controller/controller_cli.py -z Vegetable -na', 0, 9, '*', '*', '*')
+        cron.command(f'python3 ~/irrigation_controller/controller_cli.py -z Back -na', 0, 9, '*', '*', '*')
+        cron.command(f'python3 ~/irrigation_controller/controller_cli.py -z Front -na', 0, 9, '*', '*', '*')
         #  /home/pi/tg/bin/telegram-cli -e 'msg domotica_pablo "/modo_automatico on 23"' >/tmp/tg_on.log 2>/tmp/tg_on_err.log
         cron.command(f'# Zones')
 
@@ -112,23 +112,13 @@ class GCalendar:
             cron.command(f'python3 ~/irrigation_controller/controller_cli.py -z {event["summary"]} -na',
                          dt_end.minute, dt_end.hour, dt_end.day, dt_end.month, '*')
 
-        # log.debug(cron.to_cron())
-        # cron.write(Path('/etc/cron.d/irrigation'))  # Permiso admin para escribir
         return cron
-        # log.info(cron.cron_content)
-        # cron.run('check')
-        # cron.run('write')
-
-    # @staticmethod
-    # def get_event_recurence(events: List[Dict]):
-    #     asd: Set = set(map(lambda i: i["summary"], events))
-    #     log.info(asd)
 
 
 def main():
     calendar = GCalendar()
     # calendar.get_calendar_list()
-    calendar.get_irrigation('<CALENDAR_ID>')
+    calendar.get_irrigation('<CALENDAR_ID>', 10)
 
 
 if __name__ == '__main__':

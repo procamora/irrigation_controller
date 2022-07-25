@@ -20,9 +20,9 @@
     - include_role:
         name: raspberry_role
 
-  post_tasks:
-    - name: Main | Remove user in sudoers
-      file:
-        path: "/etc/sudoers.d/{{ procamora_user }}"
-        state: absent
+#  post_tasks:
+#    - name: Main | Remove user in sudoers
+#      file:
+#        path: "/etc/sudoers.d/{{ procamora_user }}"
+#        state: absent
 

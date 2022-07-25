@@ -3,6 +3,11 @@ Project to create an irrigation controller bot
 
 
 # BORRAR PROJECTO Y DIOCUMENTAR LA CREACION PASO A PASO EN GOOGLE CLOUD
+ - modificar ssh de pi para acceso por certi unicamente
+ - acceso para usuario procamora solo
+ - disable user pi
+ - verificar que procamora accede bien por certi antes de permitir solo por certi
+ - verificar escalada a root de procamora con su pass
  - CREACION PROJECTO
  - HJABITLITAR API GOOGLE CALENDAR
  - CREAR API GOOGLE CALENDAR

@@ -2,13 +2,13 @@
 # -*- coding: utf-8 -*-
 
 import argparse
+import configparser
 import re
 import sys
-from pathlib  import Path
-import configparser
+from pathlib import Path
 
-from telebot import TeleBot, types, apihelper
 from procamora_utils.logger import get_logging, logging
+from telebot import TeleBot
 
 from controller import Controller
 
