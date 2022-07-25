@@ -4,7 +4,10 @@
 import argparse
 import re
 import sys
+from pathlib  import Path
+import configparser
 
+from telebot import TeleBot, types, apihelper
 from procamora_utils.logger import get_logging, logging
 
 from controller import Controller
@@ -58,6 +61,15 @@ def main():
     log.info(controller.get_status())
     controller.set_pin_zone(pin, arg.active)
     log.info(controller.get_status())
+    try:
+        config: configparser.ConfigParser = configparser.ConfigParser()
+        config.read(Path(Path(__file__).resolve().parent, "settings.cfg"))
+        notifications: configparser.SectionProxy = config["NOTIFICATIONS"]
+
+        bot: TeleBot = TeleBot(notifications.get('BOT_TOKEN'))
+        bot.send_message(int(notifications.get('ADMIN')), f'{arg.zone}({pin}) => {arg.active}', disable_notification=True)
+    except Exception as err:
+        log.critical(f'Error: {err}')
 
 
 if __name__ == '__main__':
