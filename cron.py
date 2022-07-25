@@ -55,8 +55,9 @@ class Cron:
     def write(self, file: Path) -> Tuple[bool, Text, Text]:
         new_cron: Text = self.to_cron()
         if file.exists():  # si existe veo si hay diferencias para actualizarlo
-            if new_cron != file.read_text():
-                log.info(f'update cron, original_size:{len(file.read_text())}, new_size:{len(new_cron)}')
+            actual_cron: Text = file.read_text()
+            if new_cron.rstrip() != actual_cron.rstrip():
+                log.info(f'update cron, original_size:{len(actual_cron)}, new_size:{len(new_cron)}')
                 # file.write_text(new_cron)  # no quiero ejecutar como root el script, tee esta en sudoers sin password
                 stdout, stderr = self.sudo_tee_cron(new_cron, file)
                 return True, stdout, stderr
@@ -90,10 +91,10 @@ class Cron:
         log.debug(f'stderr: {Cron.format_text(stderr)}')
         return Cron.format_text(stdout), Cron.format_text(stderr)
 
-    @staticmethod
-    def sudo_restart_cron():
-        command: Text = 'sudo /usr/bin/systemctl restart cron.service'
-        execute = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        stdout, stderr = execute.communicate()
-        log.debug(f'stdout: {Cron.format_text(stdout)}')
-        log.debug(f'stderr: {Cron.format_text(stderr)}')
+    # @staticmethod
+    # def sudo_restart_cron():
+    #     command: Text = 'sudo /usr/bin/systemctl restart cron.service'
+    #     execute = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    #     stdout, stderr = execute.communicate()
+    #     log.debug(f'stdout: {Cron.format_text(stdout)}')
+    #     log.debug(f'stderr: {Cron.format_text(stderr)}')
