@@ -9,7 +9,7 @@ jobs:
           name: Check Scripts
           command: |
             find . -type f -name '*.sh' | wc -l
-            cd iaac/ && find . -type f -name '*.sh' -exec shellcheck --external-sources {} \; && cd -
+            find . -type f -name '*.sh' -exec shellcheck --external-sources {} \;
   yamllint:
     docker:
       - image: circleci/python:3.8
