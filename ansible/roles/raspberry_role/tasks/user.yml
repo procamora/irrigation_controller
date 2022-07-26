@@ -54,7 +54,7 @@
     mode: 0660
     validate: 'visudo -cf %s'
 
-- name:  Users | Disable login user pi
+- name: Users | Disable login user pi
   ansible.builtin.user:
     name: "pi"
     state: present
