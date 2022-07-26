@@ -16,7 +16,26 @@
     append: yes
     force: yes
     comment: "Default user"
+    ssh_key_file:
   register: _create_user
+
+
+- name: Irrigation | Create ~/.ssh
+  ansible.builtin.file:
+    path: "/home/{{ procamora_user }}/.ssh/"
+    state: directory
+    mode: '0700'
+    owner: "{{ procamora_user }}"
+    group: "{{ procamora_user }}"
+
+- name: Users | Copy public key in ~/.ssh
+  copy:
+    src: ~/.ssh/services.pub
+    dest: "/home/{{ procamora_user }}/.ssh/authorized_keys"
+    mode: 0600
+    owner: "{{ procamora_user }}"
+    group: "{{ procamora_user }}"
+    remote_src: no
 
 #- name: Main | Set user in sudoers
 #  lineinfile:
