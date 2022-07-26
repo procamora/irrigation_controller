@@ -88,6 +88,8 @@ class GCalendar:
         cron.command(
             f'systemctl -q is-active mio_bot_irrigation.service && echo YES || sudo /usr/bin/systemctl restart mio_bot_irrigation.service',
             '*/10', '*', '*', '*', '*')
+        cron.command(f'# Watchdog')
+        cron.command(f'python3 ~/irrigation_controller/watchdog.py', 0, '*', '*', '*', '*')
         cron.command(f'# Backup closed if open relay at sun day')
         cron.command(f'python3 ~/irrigation_controller/controller_cli.py -z Vegetable -na -nn', 0, 9, '*', '*', '*')
         cron.command(f'python3 ~/irrigation_controller/controller_cli.py -z Back -na -nn', 0, 9, '*', '*', '*')

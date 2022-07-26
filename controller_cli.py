@@ -27,7 +27,7 @@ def create_arg_parser() -> argparse:
     required_named.add_argument('-z', '--zone', help='The zone to modify', type=str, required=False)
     # required_named.add_argument('-a', '--active', help='Pin status', action=argparse.BooleanOptionalAction)  # python 3.9
     required_named.add_argument('-a', '--active', action='store_true', help='Active Pin', default=False)  # Python < 3.9:
-    required_named.add_argument('-na', '--no-active', action='store_false', help='-Desactivate Pin', dest='active')
+    required_named.add_argument('-na', '--no-active', action='store_false', help='Desactivate Pin', dest='active')
     required_named.add_argument('-n', '--notify', action='store_true', help='Telegram Notification', default=True)  # Python < 3.9:
     required_named.add_argument('-nn', '--no-notify', action='store_false', help='Telegram Notification', dest='notify')
     my_parser.add_argument('-v', '--verbose', action='store_true', help='Verbose flag (boolean).', default=False)

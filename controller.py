@@ -2,39 +2,11 @@
 # -*- coding: utf-8 -*-
 
 from dataclasses import dataclass
-from typing import Dict, Text, NoReturn
+from typing import Dict, Text, NoReturn, Tuple
 
 from procamora_utils.logger import get_logging, logging
 
 log: logging = get_logging(True, 'gpio')
-
-
-@dataclass
-class GPIO_FAKE:
-    RPI_INFO = ''
-    BOARD = ''
-    OUT = ''
-    IN = ''
-    LOW = ''
-    HIGH = ''
-
-    def setmode(self, asd):
-        pass
-
-    def setwarnings(self, asd):
-        pass
-
-    def setup(self, a, b):
-        pass
-
-    def input(self, a):
-        return True
-
-    def output(self, a, b):
-        pass
-
-    def cleanup(self):
-        pass
 
 
 try:
@@ -42,8 +14,7 @@ try:
 except RuntimeError:
     log.critical("Error importing RPi.GPIO!  This is probably because you need superuser privileges.\n"
                  "You can achieve this by using 'sudo' to run your script")
-except ModuleNotFoundError:  # FIXME Debug
-    GPIO = GPIO_FAKE()
+
 
 
 # pinout  # bash
@@ -56,9 +27,9 @@ class Controller:
     name_vegetable: Text = "Vegetable 🍅"
     name_front: Text = "Front Garden 🌴"
     name_back: Text = "Back Garden 🌵"
-    pin_vegetable: int = 10
-    pin_front: int = 11
-    pin_back: int = 12
+    pin_vegetable: int = 12
+    pin_front: int = 10
+    pin_back: int = 11
 
     def __post_init__(self):
         print(GPIO.RPI_INFO)
@@ -79,6 +50,10 @@ class Controller:
     @staticmethod
     def is_active(zone: int) -> bool:
         return GPIO.input(zone)
+
+    def is_any_active(self) -> Tuple[bool, Dict]:
+        status: Dict = self.get_status()
+        return True in status.values(), status
 
     def set_pin_zone(self, zone: int, state: bool = False, name: Text = '') -> NoReturn:
         if zone == 0:
