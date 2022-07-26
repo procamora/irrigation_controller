@@ -242,14 +242,14 @@ def send_status(message: types.Message) -> NoReturn:
 
 @bot.message_handler(func=lambda message: message.chat.id == owner_bot, commands=[my_commands[1][1:]])
 def send_get(message: types.Message) -> NoReturn:
-    bot.reply_to(message, "zone???", reply_markup=get_markup_zones2())
+    bot.reply_to(message, "get zone", reply_markup=get_markup_zones2())
     bot.register_next_step_handler(message, check_port, action='get')
     return
 
 
 @bot.message_handler(func=lambda message: message.chat.id == owner_bot, commands=[my_commands[2][1:]])
 def send_set(message: types.Message) -> NoReturn:
-    bot.reply_to(message, "zone???", reply_markup=get_markup_zones())
+    bot.reply_to(message, "set zone", reply_markup=get_markup_zones())
     bot.register_next_step_handler(message, set_status_zone, action='set')
     return
 
@@ -258,7 +258,7 @@ def set_status_zone(message: types.Message, action: Text) -> NoReturn:
     if is_response_command(message):
         return
 
-    bot.reply_to(message, "status???", reply_markup=get_markup_status())
+    bot.reply_to(message, "set status", reply_markup=get_markup_status())
     bot.register_next_step_handler(message, check_port, action=action, other=message.text)
 
 
@@ -282,7 +282,6 @@ def check_port(message: types.Message, action: Text, other: Text = None) -> NoRe
 def send_off(message: types.Message) -> NoReturn:
     send_status(message)
     bot.reply_to(message, "closed all relays", reply_markup=get_markup_cmd())
-    # TODO parar todos los reles
     controller.stop_all()
     send_status(message)
     return
@@ -297,8 +296,6 @@ def send_refresh(message: types.Message) -> NoReturn:
     except Exception as err:
         log.error(f'[-] Error: {err}')
         bot.send_message(owner_bot, f'[-] Error GCalendar: {err}', reply_markup=get_markup_cmd())
-        os.kill(os.getpid(), signal.SIGUSR1)
-        log.warning('llego??')
     return
 
 
@@ -341,21 +338,18 @@ def daemon_gcalendar() -> NoReturn:
     except Exception as err:
         log.error(f'[-] Error: {err}')
         bot.send_message(owner_bot, f'[-] Error GCalendar: {err}', reply_markup=get_markup_cmd())
-        os.kill(os.getpid(), signal.SIGUSR1)
+        os.kill(os.getpid(), signal.SIGUSR1)  # deberia de matar el proceso padre del thread
         log.warning('llego??')
         sys.exit(1)  # creo que no tiene efecto, pero es para el validador semantico
 
     delay: int = int(config_basic.get('DELAY'))
     num_events: int = int(config_basic.get('NUM_EVENTS'))
 
-    # iteration: int = 0
     while True:
         # Al capturar el error en el nbucle infinito, si falla una vez por x motivo no afectaria,
         # ya que seguiria ejecutandose en siguientes iteraciones
         try:
-            # if iteration % 5 == 0:  # scan avanzado que ejecutamos 1 de cada 5 escaneos
             log.info('get calendar and update cron')
-            # calendar.get_calendar_list()
             get_events(calendar, num_events)
         except Exception as e:
             log.error(f'Fail thread: {e}')
@@ -374,13 +368,15 @@ def main():
 
     try:
         bot.send_message(owner_bot, "Starting bot", reply_markup=get_markup_cmd(), disable_notification=True)
-        log.info('Starting bot')
+        log.info('[+] Starting bot')
     except (apihelper.ApiException, exceptions.ReadTimeout) as e:
-        log.critical(f'Error in init bot: {e}')
+        log.critical(f'[-] Error in init bot: {e}')
         sys.exit(1)
 
     # Con esto, le decimos al bot que siga funcionando incluso si encuentra algun fallo.
-    bot.infinity_polling(none_stop=True)
+    # bot.infinity_polling(none_stop=True)
+    # Si hay un fallo me interesa que el script termine, para que pueda relanzarse el servicio desde el cron
+    bot.infinity_polling(none_stop=False)
 
 
 if __name__ == "__main__":

@@ -89,9 +89,9 @@ class GCalendar:
             f'systemctl -q is-active mio_bot_irrigation.service && echo YES || sudo /usr/bin/systemctl restart mio_bot_irrigation.service',
             '*/10', '*', '*', '*', '*')
         cron.command(f'# Backup closed if open relay at sun day')
-        cron.command(f'python3 ~/irrigation_controller/controller_cli.py -z Vegetable -na', 0, 9, '*', '*', '*')
-        cron.command(f'python3 ~/irrigation_controller/controller_cli.py -z Back -na', 0, 9, '*', '*', '*')
-        cron.command(f'python3 ~/irrigation_controller/controller_cli.py -z Front -na', 0, 9, '*', '*', '*')
+        cron.command(f'python3 ~/irrigation_controller/controller_cli.py -z Vegetable -na -nn', 0, 9, '*', '*', '*')
+        cron.command(f'python3 ~/irrigation_controller/controller_cli.py -z Back -na -nn', 0, 9, '*', '*', '*')
+        cron.command(f'python3 ~/irrigation_controller/controller_cli.py -z Front -na -nn', 0, 9, '*', '*', '*')
         #  /home/pi/tg/bin/telegram-cli -e 'msg domotica_pablo "/modo_automatico on 23"' >/tmp/tg_on.log 2>/tmp/tg_on_err.log
         cron.command(f'# Zones')
 

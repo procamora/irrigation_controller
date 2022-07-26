@@ -62,3 +62,10 @@ help - Show help
 start - Start the bot
 """
 ```
+
+
+
+![diagram][diagram]
+
+
+[diagram]: diagram.drawio.svg
