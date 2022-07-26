@@ -9,10 +9,8 @@
 #    enabled: yes
 #    force: yes
 #
-#- name: Restart service Filebeat
-#  systemd:
-#    name: filebeat
-#    state: restarted
-#    daemon_reload: yes
-#    enabled: yes
-#    force: yes
+- name: Restart Service SSH
+  systemd:
+    name: sshd
+    state: restarted
+    force: yes

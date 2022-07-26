@@ -54,6 +54,20 @@
     mode: 0660
     validate: 'visudo -cf %s'
 
-# TODO DISABLE USER PI
+- name:  Users | Disable login user pi
+  ansible.builtin.user:
+    name: "pi"
+    state: present
+    password_lock: true
+    shell: "/sbin/nologin"
 
-
+- name: Users | Configure sshd_config
+  lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: '{{ item.regex }}'
+    line: '{{ item.line }}'
+    backrefs: yes
+  loop:
+    - { regex: '^( )*#?( )*PubkeyAuthentication( )*.*$', line: "PubkeyAuthentication yes" }
+    - { regex: '^( )*#?( )*PasswordAuthentication( )*.*$', line: "PasswordAuthentication no" }
+  notify: Restart Service SSH
