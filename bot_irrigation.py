@@ -11,7 +11,6 @@ import os
 import signal
 import sys
 import threading
-import re
 import time
 from pathlib import Path
 from typing import NoReturn, Tuple, Text, List
@@ -307,11 +306,11 @@ def send_refresh(message: types.Message) -> NoReturn:
 
 @bot.message_handler(func=lambda message: message.chat.id == owner_bot, commands=[my_commands[5][1:]])
 def send_events(message: types.Message) -> NoReturn:
-    response: List[List[List[Text]]] = list([['Zone', 'Date']])
+    response: List[List[Text]] = list([['Zone', 'Date']])
 
     cron: Cron = Cron(user="")
     try:
-        crons = cron.cron_to_list(file_cron)
+        crons: List[List[Text]] = cron.cron_to_list(file_cron)
     except Exception as err:
         log.critical(f'[-] Error cron_to_list: {err}')
         bot.reply_to(message, f'[-] Error cron_to_list: {err}', reply_markup=get_markup_cmd())
@@ -322,13 +321,8 @@ def send_events(message: types.Message) -> NoReturn:
         bot.reply_to(message, f"no events in {str(file_cron)}", reply_markup=get_markup_cmd())
         return
 
-    response.append(crons)
-    # for zone in crons:
-    #     response.append(zone)
-
-    table: AsciiTable = AsciiTable(response)
-    table.justify_columns = {0: 'center', 1: 'center'}
-    send_message_safe(message, str(table.table))
+    for zone in crons[0:20]:  # only 20 events, more maybe exceded limit message size
+        response.append(zone)
     return
 
 
