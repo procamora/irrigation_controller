@@ -12,7 +12,10 @@ from telebot import TeleBot
 
 from controller import Controller
 
-log: logging = get_logging(True, 'gpio')
+if sys.platform == 'darwin':
+    log: logging = get_logging(verbose=True, name='gpio')
+else:  # raspberry
+    log: logging = get_logging(verbose=False, name='gpio')
 
 
 def create_arg_parser() -> argparse:
@@ -26,9 +29,11 @@ def create_arg_parser() -> argparse:
     required_named.add_argument('-p', '--pin', help='The pin to modify', type=int, required=False)
     required_named.add_argument('-z', '--zone', help='The zone to modify', type=str, required=False)
     # required_named.add_argument('-a', '--active', help='Pin status', action=argparse.BooleanOptionalAction)  # python 3.9
-    required_named.add_argument('-a', '--active', action='store_true', help='Active Pin', default=False)  # Python < 3.9:
+    required_named.add_argument('-a', '--active', action='store_true', help='Active Pin',
+                                default=False)  # Python < 3.9:
     required_named.add_argument('-na', '--no-active', action='store_false', help='Desactivate Pin', dest='active')
-    required_named.add_argument('-n', '--notify', action='store_true', help='Telegram Notification', default=True)  # Python < 3.9:
+    required_named.add_argument('-n', '--notify', action='store_true', help='Telegram Notification',
+                                default=True)  # Python < 3.9:
     required_named.add_argument('-nn', '--no-notify', action='store_false', help='Telegram Notification', dest='notify')
     my_parser.add_argument('-v', '--verbose', action='store_true', help='Verbose flag (boolean).', default=False)
 
@@ -41,7 +46,7 @@ def create_arg_parser() -> argparse:
 
 def main():
     arg = create_arg_parser()
-    log.info(arg)
+    log.debug(arg)
     controller: Controller = Controller()
 
     pin: int
@@ -58,11 +63,11 @@ def main():
     else:
         pin = arg.pin
 
-    log.info(f'{pin} => {arg.active}')
+    log.debug(f'{pin} => {arg.active}')
 
-    log.info(controller.get_status())
+    log.debug(controller.get_status())
     controller.set_pin_zone(pin, arg.active)
-    log.info(controller.get_status())
+    log.debug(controller.get_status())
     if arg.notify:
         try:
             config: configparser.ConfigParser = configparser.ConfigParser()
@@ -70,7 +75,8 @@ def main():
             notifications: configparser.SectionProxy = config["NOTIFICATIONS"]
 
             bot: TeleBot = TeleBot(notifications.get('BOT_TOKEN'))
-            bot.send_message(int(notifications.get('ADMIN')), f'{arg.zone}({pin}) => {arg.active}', disable_notification=True)
+            bot.send_message(int(notifications.get('ADMIN')), f'{arg.zone}({pin}) => {arg.active}',
+                             disable_notification=True)
         except Exception as err:
             log.critical(f'Error: {err}')
 

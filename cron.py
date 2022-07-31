@@ -5,11 +5,15 @@ import subprocess
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Text, List, NoReturn, Any, Tuple
+import sys
 
 import jinja2
 from procamora_utils.logger import get_logging, logging
 
-log: logging = get_logging(True, 'cron')
+if sys.platform == 'darwin':
+    log: logging = get_logging(verbose=True, name='cron')
+else:  # raspberry
+    log: logging = get_logging(verbose=False, name='cron')
 
 
 @dataclass
@@ -35,7 +39,7 @@ class Cron:
                 month = f'{month} '
 
             cron = f'{minute} {hour} {day} {month} {week}'
-            # log.info(cron)
+            # log.debug(cron)
             self.commands.append(f'{cron}   {self.user}  {cmd}')
 
     def to_cron(self) -> Text:
@@ -48,7 +52,7 @@ class Cron:
         )
         template_row: jinja2.environment.Template = jinja_env.get_template(str(template_path))
         # cmd = '\n'.join(map(lambda i: f'{i}', self.commands))
-        # log.info(cmd)
+        # log.debug(cmd)
         render: Text = template_row.render(commands=self.commands, user=self.user)
         return render
 

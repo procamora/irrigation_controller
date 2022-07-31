@@ -24,7 +24,10 @@ from controller import Controller
 from cron import Cron
 from gcalendar import GCalendar
 
-log: logging = get_logging(False, 'bot_irrigation')
+if sys.platform == 'darwin':
+    log: logging = get_logging(verbose=True, name='bot_irrigation')
+else:  # raspberry
+    log: logging = get_logging(verbose=False, name='bot_irrigation')
 
 
 def get_basic_file_config():
@@ -290,7 +293,7 @@ def send_off(message: types.Message) -> NoReturn:
 @bot.message_handler(func=lambda message: message.chat.id == owner_bot, commands=[my_commands[4][1:]])
 def send_refresh(message: types.Message) -> NoReturn:
     try:
-        log.info('get calendar and update cron')
+        log.debug('get calendar and update cron')
         get_events(GCalendar(), int(config_basic.get('NUM_EVENTS')))
         bot.reply_to(message, "update calendars and cron", reply_markup=get_markup_cmd())
     except Exception as err:
@@ -349,7 +352,7 @@ def daemon_gcalendar() -> NoReturn:
         # Al capturar el error en el nbucle infinito, si falla una vez por x motivo no afectaria,
         # ya que seguiria ejecutandose en siguientes iteraciones
         try:
-            log.info('get calendar and update cron')
+            log.debug('get calendar and update cron')
             get_events(calendar, num_events)
         except Exception as e:
             log.error(f'Fail thread: {e}')

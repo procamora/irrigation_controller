@@ -5,13 +5,17 @@ import configparser
 from datetime import datetime
 from pathlib import Path
 from typing import Dict
+import sys
 
 from procamora_utils.logger import get_logging, logging
 from telebot import TeleBot
 
 from controller import Controller
 
-log: logging = get_logging(True, 'watchdog')
+if sys.platform == 'darwin':
+    log: logging = get_logging(verbose=True, name='watchdog')
+else:  # raspberry
+    log: logging = get_logging(verbose=False, name='watchdog')
 
 
 def main():
@@ -31,7 +35,8 @@ def main():
             notifications: configparser.SectionProxy = config["NOTIFICATIONS"]
 
             bot: TeleBot = TeleBot(notifications.get('BOT_TOKEN'))
-            bot.send_message(int(notifications.get('ADMIN')), f'watchdog => {status}', disable_notification=disable_notification)
+            bot.send_message(int(notifications.get('ADMIN')), f'watchdog => {status}',
+                             disable_notification=disable_notification)
         except Exception as err:
             log.critical(f'Error: {err}')
 

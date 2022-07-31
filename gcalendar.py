@@ -6,6 +6,7 @@ from __future__ import print_function
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Text, Optional
+import sys
 
 from google.auth.exceptions import GoogleAuthError
 from google.auth.transport.requests import Request
@@ -16,7 +17,10 @@ from procamora_utils.logger import get_logging, logging
 
 from cron import Cron
 
-log: logging = get_logging(True, 'calendar')
+if sys.platform == 'darwin':
+    log: logging = get_logging(verbose=True, name='gcalendar')
+else:  # raspberry
+    log: logging = get_logging(verbose=False, name='gcalendar')
 
 
 # https://developers.google.com/calendar/api/quickstart/python
@@ -64,32 +68,33 @@ class GCalendar:
         while True:
             calendar_list: Dict = self.service.calendarList().list(pageToken=page_token).execute()
             for calendar_list_entry in calendar_list['items']:
-                log.info(f"{calendar_list_entry['summary']} => {calendar_list_entry['id']}")
+                log.debug(f"{calendar_list_entry['summary']} => {calendar_list_entry['id']}")
             page_token = calendar_list.get('nextPageToken')
             if not page_token:
                 break
 
     def get_irrigation(self, calendar_id: Text, num_events: 30) -> Optional[Cron]:
-        log.info(self.service)
         # Call the Calendar API
         now: Text = datetime.utcnow().isoformat() + 'Z'  # 'Z' indicates UTC time
-        log.info(f'Getting the upcoming {num_events} events')
+        log.debug(f'Getting the upcoming {num_events} events')
         events_result: Dict = self.service.events().list(calendarId=calendar_id,
                                                          timeMin=now,
                                                          maxResults=num_events,
                                                          singleEvents=True,
                                                          orderBy='startTime').execute()
+
         if not events_result['items']:
             log.warning('No upcoming events found.')
             return None
 
+        log.debug(f'Getting the upcoming {num_events} events > {len(events_result["items"])}')
         cron = Cron(user='procamora')
         cron.command(f'# Verify service active')
         cron.command(
             f'systemctl -q is-active mio_bot_irrigation.service && echo YES || sudo /usr/bin/systemctl restart mio_bot_irrigation.service',
             '*/10', '*', '*', '*', '*')
         cron.command(f'# Watchdog')
-        cron.command(f'python3 ~/irrigation_controller/watchdog.py', 0, '*', '*', '*', '*')
+        cron.command(f'python3 ~/irrigation_controller/watchdog.py', 5, '*', '*', '*', '*')
         cron.command(f'# Backup closed if open relay at sun day')
         cron.command(f'python3 ~/irrigation_controller/controller_cli.py -z Vegetable -na -nn', 0, 9, '*', '*', '*')
         cron.command(f'python3 ~/irrigation_controller/controller_cli.py -z Back -na -nn', 0, 9, '*', '*', '*')
@@ -105,7 +110,7 @@ class GCalendar:
                 log.warning(f'skip {event["summary"]}')
                 continue
 
-            # log.info(f'{start} {end} {event["summary"]}')
+            # log.debug(f'{start} {end} {event["summary"]}')
             dt_start: datetime = datetime.fromisoformat(event['start'].get('dateTime'))
             dt_end: datetime = datetime.fromisoformat(event['end'].get('dateTime'))
 

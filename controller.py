@@ -3,18 +3,20 @@
 
 from dataclasses import dataclass
 from typing import Dict, Text, NoReturn, Tuple
+import sys
 
 from procamora_utils.logger import get_logging, logging
 
-log: logging = get_logging(True, 'gpio')
-
+if sys.platform == 'darwin':
+    log: logging = get_logging(verbose=True, name='gpio')
+else:  # raspberry
+    log: logging = get_logging(verbose=False, name='gpio')
 
 try:
     import RPi.GPIO as GPIO
 except RuntimeError:
     log.critical("Error importing RPi.GPIO!  This is probably because you need superuser privileges.\n"
                  "You can achieve this by using 'sudo' to run your script")
-
 
 
 # pinout  # bash
@@ -27,8 +29,8 @@ class Controller:
     name_vegetable: Text = "Vegetable 🍅"
     name_front: Text = "Front Garden 🌴"
     name_back: Text = "Back Garden 🌵"
-    pin_vegetable: int = 12
-    pin_front: int = 10
+    pin_vegetable: int = 10
+    pin_front: int = 12
     pin_back: int = 11
 
     def __post_init__(self):
@@ -56,6 +58,7 @@ class Controller:
         return True in status.values(), status
 
     def set_pin_zone(self, zone: int, state: bool = False, name: Text = '') -> NoReturn:
+        self.stop_all()  # the transformer does not allow to connect two electrovalves at the same time
         if zone == 0:
             pin: int = self.get_pin_zone(name)
             log.debug(f'zone: {zone}, name: {name}, pin:{pin}, state:{state}')
@@ -82,11 +85,11 @@ class Controller:
 
 def main():
     controller: Controller = Controller()
-    log.info(controller.get_status())
+    log.debug(controller.get_status())
     controller.set_pin_zone(controller.pin_vegetable, True)
-    log.info(controller.get_status())
+    log.debug(controller.get_status())
     controller.stop_all()
-    log.info(controller.get_status())
+    log.debug(controller.get_status())
 
 
 if __name__ == '__main__':
