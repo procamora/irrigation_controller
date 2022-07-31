@@ -336,12 +336,18 @@ def send_events(message: types.Message) -> NoReturn:
 @bot.message_handler(func=lambda message: message.chat.id == owner_bot, content_types=["document"])
 def my_document(message: types.Message) -> NoReturn:
     if message.document.mime_type == 'application/json':
-        file_info: types.File = bot.get_file(message.document.file_id)
-        # bot.send_message(message.chat.id, f'https://api.telegram.org/file/bot{TOKEN}/{file_info.file_path}')
-        file: requests.Response = requests.get(
-            f'https://api.telegram.org/file/bot{bot.token}/{file_info.file_path}')
-        torrent_file: Path = Path(Path(__file__).resolve().parent, 'credentials_aux.json')
-        torrent_file.write_bytes(file.content)
+        try:
+            file_info: types.File = bot.get_file(message.document.file_id)
+            # bot.send_message(message.chat.id, f'https://api.telegram.org/file/bot{TOKEN}/{file_info.file_path}')
+            file: requests.Response = requests.get(
+                f'https://api.telegram.org/file/bot{bot.token}/{file_info.file_path}')
+            torrent_file: Path = Path(Path(__file__).resolve().parent, 'credentials_aux.json')
+            torrent_file.write_bytes(file.content)
+        except Exception as err:
+            log.error(f'[-] Error: {err}')
+            bot.reply_to(message, f'[-] Error file json: {err}', reply_markup=get_markup_cmd())
+            return
+
         try:
             arr: Dict = json.loads(torrent_file.read_text())
             if 'web' not in arr.keys():
@@ -350,6 +356,7 @@ def my_document(message: types.Message) -> NoReturn:
         except Exception as err:
             log.error(f'[-] Error: {err}')
             bot.reply_to(message, f'[-] Error json: {err}', reply_markup=get_markup_cmd())
+            return
 
         bot.reply_to(message, f'{type(file.content)}', reply_markup=get_markup_cmd())
         bot.reply_to(message, f'Download torrent: "{message.document.file_name}"', reply_markup=get_markup_cmd())

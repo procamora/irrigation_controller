@@ -21,6 +21,15 @@
     remote_src: no
     owner: "{{ procamora_user }}"
 
+- name: Irrigation | set permission directory irrigation_controller
+  file:
+    path: "{{ irrigation_path }}/"
+#    state: directory
+    owner: "{{ procamora_user }}"
+    group: "{{ procamora_user }}"
+    mode: 0700
+    recurse: yes
+
 - name: Irrigation | Detete {{ repo_tar }} in localhost
   file:
     path: "/tmp/{{ repo_tar }}"
