@@ -18,11 +18,11 @@ except RuntimeError:
     log.critical("Error importing RPi.GPIO!  This is probably because you need superuser privileges.\n"
                  "You can achieve this by using 'sudo' to run your script")
 
-
 # pinout  # bash
 # sudo raspi-gpio get
 # gpio readall  # bash  # gpio: command not found
-# GPIO.setwarnings(False)
+GPIO.setwarnings(False)
+
 
 @dataclass
 class Controller:
