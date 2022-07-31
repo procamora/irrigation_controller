@@ -11,9 +11,10 @@ import os
 import signal
 import sys
 import threading
+import re
 import time
 from pathlib import Path
-from typing import NoReturn, Tuple, Text
+from typing import NoReturn, Tuple, Text, List
 
 from procamora_utils.logger import get_logging, logging
 from requests import exceptions
@@ -54,7 +55,8 @@ my_commands: Tuple[Text, ...] = (
     '/get',  # 1
     '/set',  # 2
     '/off',  # 3
-    '/refresh',  # 3
+    '/refresh',  # 4
+    '/events',  # 5
     '/help'  # -2
     '/exit',  # -1
 )
@@ -78,6 +80,7 @@ else:
 
 owner_bot: int = int(config_basic.get('ADMIN'))
 calendar_id: Text = config_basic.get('CALENDAR_ID')
+file_cron: Path = Path(config_basic.get('FILE_CRON'))
 
 controller: Controller = Controller()
 
@@ -86,7 +89,7 @@ def get_markup_cmd() -> types.ReplyKeyboardMarkup:
     markup: types.ReplyKeyboardMarkup = types.ReplyKeyboardMarkup(one_time_keyboard=True)
     markup.row(my_commands[0])
     markup.row(my_commands[1], my_commands[2], my_commands[3])
-    markup.row(my_commands[4])
+    markup.row(my_commands[4], my_commands[5])
     return markup
 
 
@@ -302,6 +305,32 @@ def send_refresh(message: types.Message) -> NoReturn:
     return
 
 
+@bot.message_handler(func=lambda message: message.chat.id == owner_bot, commands=[my_commands[5][1:]])
+def send_events(message: types.Message) -> NoReturn:
+    response: List[List[List[Text]]] = list([['Zone', 'Date']])
+
+    cron: Cron = Cron(user="")
+    try:
+        crons = cron.cron_to_list(file_cron)
+    except Exception as err:
+        log.critical(f'[-] Error cron_to_list: {err}')
+        bot.reply_to(message, f'[-] Error cron_to_list: {err}', reply_markup=get_markup_cmd())
+        return
+
+    log.debug(crons)
+    if len(crons) == 0:
+        bot.reply_to(message, f"no events in {str(file_cron)}", reply_markup=get_markup_cmd())
+        return
+
+    for zone in crons:
+        response.append(zone)
+
+    table: AsciiTable = AsciiTable(response)
+    table.justify_columns = {0: 'center', 1: 'center'}
+    send_message_safe(message, str(table.table))
+    return
+
+
 @bot.message_handler(func=lambda message: message.chat.id == owner_bot)
 def text_not_valid(message: types.Message) -> NoReturn:
     texto: Text = 'unknown command, enter a valid command :)'
@@ -323,7 +352,7 @@ def get_events(calendar: GCalendar, num_events: int):
         write: bool
         stdout: Text
         stderr: Text
-        write, stdout, stderr = cron.write(Path('/etc/cron.d/irrigation'))  # Permiso admin para escribir
+        write, stdout, stderr = cron.write(file_cron)  # Permiso admin para escribir
         if write:
             if len(stderr) != 0:
                 bot.send_message(owner_bot, f'[+] stderr: {stderr}', reply_markup=get_markup_cmd())

@@ -6,6 +6,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Text, List, NoReturn, Any, Tuple
 import sys
+import re
+from datetime import datetime
 
 import jinja2
 from procamora_utils.logger import get_logging, logging
@@ -95,6 +97,22 @@ class Cron:
         log.debug(f'stderr: {Cron.format_text(stderr)}')
         return Cron.format_text(stdout), Cron.format_text(stderr)
 
+    @staticmethod
+    def cron_to_list(file: Path) -> List[List[List[Text]]]:
+        lines: List[List[List[Text]]] = []
+        for line in file.read_text().split('\n'):
+            # -a final para solo ver las activacaiones
+            match: re.Match = re.search(
+                r'^(?P<minute>\d+)( )+(?P<hour>\d+)( )+(?P<day>\d+)( )+(?P<month>\d+).*(controller_cli\.py)( )+(-\w+)( )+(?P<zone>.*)( )+-a$',
+                line)
+            if match:
+                c = match.groupdict()
+                dt: datetime = datetime.strptime(f'{c["month"]}/{c["day"]} {c["hour"]}:{c["minute"]}', "%m/%d %H:%M")
+                lines.append([[f'{c["zone"]}', dt.strftime('%b %d at %H:%M')]])
+
+        log.debug(lines)
+        return lines
+
     # @staticmethod
     # def sudo_restart_cron():
     #     command: Text = 'sudo /usr/bin/systemctl restart cron.service'
@@ -102,3 +120,8 @@ class Cron:
     #     stdout, stderr = execute.communicate()
     #     log.debug(f'stdout: {Cron.format_text(stdout)}')
     #     log.debug(f'stderr: {Cron.format_text(stderr)}')
+
+
+if __name__ == "__main__":
+    cron = Cron('test')
+    cron.cron_to_list(Path('./cron.debug'))
