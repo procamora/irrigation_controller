@@ -28,7 +28,7 @@
     owner: "{{ procamora_user }}"
     group: "{{ procamora_user }}"
     mode: 0700
-    recurse: yes
+    recurse: no
 
 - name: Irrigation | Detete {{ repo_tar }} in localhost
   file:
