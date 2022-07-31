@@ -57,8 +57,9 @@ class Controller:
         status: Dict = self.get_status()
         return True in status.values(), status
 
-    def set_pin_zone(self, zone: int, state: bool = False, name: Text = '') -> NoReturn:
-        self.stop_all()  # the transformer does not allow to connect two electrovalves at the same time
+    def set_pin_zone(self, zone: int, state: bool = False, name: Text = '', secure: bool = True) -> NoReturn:
+        if secure:
+            self.stop_all()  # the transformer does not allow to connect two electrovalves at the same time
         if zone == 0:
             pin: int = self.get_pin_zone(name)
             log.debug(f'zone: {zone}, name: {name}, pin:{pin}, state:{state}')
@@ -76,7 +77,7 @@ class Controller:
 
     def stop_all(self) -> NoReturn:
         for zone in [self.pin_vegetable, self.pin_front, self.pin_back]:
-            self.set_pin_zone(zone, False)
+            self.set_pin_zone(zone, False, secure=False)
 
     @staticmethod
     def cleanup() -> NoReturn:

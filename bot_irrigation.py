@@ -323,6 +323,10 @@ def send_events(message: types.Message) -> NoReturn:
 
     for zone in crons[0:20]:  # only 20 events, more maybe exceded limit message size
         response.append(zone)
+
+    table: AsciiTable = AsciiTable(response)
+    table.justify_columns = {0: 'center', 1: 'center'}
+    send_message_safe(message, str(table.table))
     return
 
 
