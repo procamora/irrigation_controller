@@ -322,8 +322,9 @@ def send_events(message: types.Message) -> NoReturn:
         bot.reply_to(message, f"no events in {str(file_cron)}", reply_markup=get_markup_cmd())
         return
 
-    for zone in crons:
-        response.append(zone)
+    response.append(crons)
+    # for zone in crons:
+    #     response.append(zone)
 
     table: AsciiTable = AsciiTable(response)
     table.justify_columns = {0: 'center', 1: 'center'}

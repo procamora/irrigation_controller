@@ -98,8 +98,8 @@ class Cron:
         return Cron.format_text(stdout), Cron.format_text(stderr)
 
     @staticmethod
-    def cron_to_list(file: Path) -> List[List[List[Text]]]:
-        lines: List[List[List[Text]]] = []
+    def cron_to_list(file: Path) -> List[List[Text]]:
+        lines: List[List[Text]] = []
         for line in file.read_text().split('\n'):
             # -a final para solo ver las activacaiones
             match: re.Match = re.search(
@@ -108,7 +108,7 @@ class Cron:
             if match:
                 c = match.groupdict()
                 dt: datetime = datetime.strptime(f'{c["month"]}/{c["day"]} {c["hour"]}:{c["minute"]}', "%m/%d %H:%M")
-                lines.append([[f'{c["zone"]}', dt.strftime('%b %d at %H:%M')]])
+                lines.append([f'{c["zone"]}', dt.strftime('%b %d at %H:%M')])
 
         log.debug(lines)
         return lines
