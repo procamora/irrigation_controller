@@ -7,27 +7,31 @@
 
 
 import configparser
+import json
 import os
 import signal
 import sys
 import threading
 import time
 from pathlib import Path
-from typing import NoReturn, Tuple, Text, List
+from typing import NoReturn, Tuple, Text, List, Dict
+import requests
 
 from procamora_utils.logger import get_logging, logging
 from requests import exceptions
 from telebot import TeleBot, types, apihelper
 from terminaltables import AsciiTable
 
-from controller import Controller
 from cron import Cron
 from gcalendar import GCalendar
+from controller import Controller
 
 if sys.platform == 'darwin':
     log: logging = get_logging(verbose=True, name='bot_irrigation')
 else:  # raspberry
     log: logging = get_logging(verbose=False, name='bot_irrigation')
+
+controller: Controller = Controller()
 
 
 def get_basic_file_config():
@@ -35,9 +39,10 @@ def get_basic_file_config():
 ADMIN = 111111
 BOT_TOKEN = 1069111113:AAHOk9K5TAAAAAAAAAAIY1OgA_LNpAAAAA
 DEBUG = 0
-DELAY = 30
+DELAY = 300
 CALENDAR_ID = sdfdsfsdf@group.calendar.google.com
 NUM_EVENTS = 30
+FILE_CRON = /etc/cron.d/irrigation
 
 [NOTIFICATIONS]
 ADMIN = 111111
@@ -80,8 +85,6 @@ else:
 owner_bot: int = int(config_basic.get('ADMIN'))
 calendar_id: Text = config_basic.get('CALENDAR_ID')
 file_cron: Path = Path(config_basic.get('FILE_CRON'))
-
-controller: Controller = Controller()
 
 
 def get_markup_cmd() -> types.ReplyKeyboardMarkup:
@@ -328,6 +331,33 @@ def send_events(message: types.Message) -> NoReturn:
     table.justify_columns = {0: 'center', 1: 'center'}
     send_message_safe(message, str(table.table))
     return
+
+
+@bot.message_handler(func=lambda message: message.chat.id == owner_bot, content_types=["document"])
+def my_document(message: types.Message) -> NoReturn:
+    if message.document.mime_type == 'application/json':
+        file_info: types.File = bot.get_file(message.document.file_id)
+        # bot.send_message(message.chat.id, f'https://api.telegram.org/file/bot{TOKEN}/{file_info.file_path}')
+        file: requests.Response = requests.get(
+            f'https://api.telegram.org/file/bot{bot.token}/{file_info.file_path}')
+        torrent_file: Path = Path(Path(__file__).resolve().parent, 'credentials_aux.json')
+        torrent_file.write_bytes(file.content)
+        try:
+            arr: Dict = json.loads(torrent_file.read_text())
+            if 'web' not in arr.keys():
+                bot.reply_to(message, f'[-] Error credentials: not valid json', reply_markup=get_markup_cmd())
+                return
+        except Exception as err:
+            log.error(f'[-] Error: {err}')
+            bot.reply_to(message, f'[-] Error json: {err}', reply_markup=get_markup_cmd())
+
+        bot.reply_to(message, f'{type(file.content)}', reply_markup=get_markup_cmd())
+        bot.reply_to(message, f'Download torrent: "{message.document.file_name}"', reply_markup=get_markup_cmd())
+        # send_show_torrent(message)
+    else:
+        bot.reply_to(message, f'not implemented type: "{message.document.mime_type}"',
+                     reply_markup=get_markup_cmd())
+    return  # solo esta puesto para que no falle la inspeccion de codigo
 
 
 @bot.message_handler(func=lambda message: message.chat.id == owner_bot)
