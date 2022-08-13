@@ -69,3 +69,11 @@ start - Start the bot
 
 
 [diagram]: diagram.drawio.svg
+
+
+
+
+gcloud projects create procamora-irrigation --name="Irrigation Controller"
+gcloud services enable calendar-json.googleapis.com --project=procamora-irrigation
+gui -> APIs & Services > OAuth consent screen.
+gio -> APIs & Services > Credentials -> ID de clientes OAuth 2.0 

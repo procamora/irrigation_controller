@@ -301,6 +301,7 @@ def send_refresh(message: types.Message) -> NoReturn:
         log.debug('get calendar and update cron')
         get_events(GCalendar(), int(config_basic.get('NUM_EVENTS')))
         bot.reply_to(message, "update calendars and cron", reply_markup=get_markup_cmd())
+        send_events(message)
     except Exception as err:
         log.error(f'[-] Error: {err}')
         bot.send_message(owner_bot, f'[-] Error GCalendar: {err}', reply_markup=get_markup_cmd())
@@ -404,8 +405,9 @@ def daemon_gcalendar() -> NoReturn:
     try:
         calendar: GCalendar = GCalendar()
     except Exception as err:
-        log.error(f'[-] Error: {err}')
+        log.error(f'[-] Error GCalendar: {err}')
         bot.send_message(owner_bot, f'[-] Error GCalendar: {err}', reply_markup=get_markup_cmd())
+        time.sleep(5)
         os.kill(os.getpid(), signal.SIGUSR1)  # deberia de matar el proceso padre del thread
         log.warning('llego??')
         sys.exit(1)  # creo que no tiene efecto, pero es para el validador semantico

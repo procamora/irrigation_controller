@@ -3,6 +3,7 @@
 
 from __future__ import print_function
 
+import configparser
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Text, Optional
@@ -40,7 +41,7 @@ def auth() -> Credentials:
     if token_path.exists():
         creds = Credentials.from_authorized_user_file(str(token_path), scopes)
     else:
-        log.warn(f'{token_path} => exit:{token_path.exists()}')
+        log.warning(f'{token_path} => exit:{token_path.exists()}')
 
     # If there are no (valid) credentials available, let the user log in.
     if not creds or not creds.valid:
@@ -114,18 +115,22 @@ class GCalendar:
             dt_start: datetime = datetime.fromisoformat(event['start'].get('dateTime'))
             dt_end: datetime = datetime.fromisoformat(event['end'].get('dateTime'))
 
-            cron.command(f'python3 ~/irrigation_controller/controller_cli.py -z {event["summary"]} -a',
+            cron.command(f'python3 ~/irrigation_controller/controller_cli.py -z "{event["summary"]}" -a',
                          dt_start.minute, dt_start.hour, dt_start.day, dt_start.month, '*')
-            cron.command(f'python3 ~/irrigation_controller/controller_cli.py -z {event["summary"]} -na',
+            cron.command(f'python3 ~/irrigation_controller/controller_cli.py -z "{event["summary"]}" -na',
                          dt_end.minute, dt_end.hour, dt_end.day, dt_end.month, '*')
 
         return cron
 
 
 def main():
+    config: configparser.ConfigParser = configparser.ConfigParser()
+    file_config: Path = Path(Path(__file__).resolve().parent, "settings.cfg")
+    config.read(file_config)
     calendar = GCalendar()
-    # calendar.get_calendar_list()
-    calendar.get_irrigation('<CALENDAR_ID>', 10)
+    calendar.get_calendar_list()
+    events = calendar.get_irrigation(config["BASICS"]["CALENDAR_ID"], 10)
+    log.info(events)
 
 
 if __name__ == '__main__':
