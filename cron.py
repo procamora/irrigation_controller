@@ -90,7 +90,7 @@ class Cron:
 
     @staticmethod
     def sudo_tee_cron(content: Text, path: Path) -> Tuple[Text, Text]:
-        command: Text = f'echo "{content}" | sudo /bin/tee {str(path)} >/dev/null'
+        command: Text = f'echo \'{content}\' | sudo /bin/tee {str(path)} >/dev/null'
         execute = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         stdout, stderr = execute.communicate()
         log.debug(f'stdout: {Cron.format_text(stdout)}')
@@ -122,6 +122,10 @@ class Cron:
     #     log.debug(f'stderr: {Cron.format_text(stderr)}')
 
 
-if __name__ == "__main__":
+def main():
     cron = Cron('test')
     cron.cron_to_list(Path('./cron.debug'))
+
+
+if __name__ == "__main__":
+    main()
