@@ -92,7 +92,8 @@ class GCalendar:
         cron = Cron(user='procamora')
         cron.command(f'# Verify service active')
         cron.command(
-            f'systemctl -q is-active mio_bot_irrigation.service && echo YES || sudo /usr/bin/systemctl restart mio_bot_irrigation.service',
+            f'systemctl -q is-active mio_bot_irrigation.service && echo YES || '
+            f'sudo /usr/bin/systemctl restart mio_bot_irrigation.service',
             '*/10', '*', '*', '*', '*')
         cron.command(f'# Watchdog')
         cron.command(f'python3 ~/irrigation_controller/watchdog.py', 30, '*', '*', '*', '*')
@@ -129,8 +130,8 @@ def main():
     config.read(file_config)
     calendar = GCalendar()
     calendar.get_calendar_list()
-    events = calendar.get_irrigation(config["BASICS"]["CALENDAR_ID"], 10)
-    log.info(events)
+    events: Cron = calendar.get_irrigation(config["BASICS"]["CALENDAR_ID"], 10)
+    log.info(events.to_cron())
 
 
 if __name__ == '__main__':
