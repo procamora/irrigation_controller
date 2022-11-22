@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-
+import re
 from dataclasses import dataclass
 from typing import Dict, Text, NoReturn, Tuple
 import sys
 
 from procamora_utils.logger import get_logging, logging
+
+from ha import get_irrigation_ha, set_irrigation_ha
 
 if sys.platform == 'darwin':
     log: logging = get_logging(verbose=True, name='gpio')
@@ -59,19 +61,36 @@ class Controller:
 
     def set_pin_zone(self, zone: int, state: bool = False, name: Text = '') -> NoReturn:
         if zone == 0:
-            pin: int = self.get_pin_zone(name)
+            pin: int = self.get_name_to_pin(name)
             log.debug(f'zone: {zone}, name: {name}, pin:{pin}, state:{state}')
+            re.search('', name, re.IGNORECASE)
             GPIO.output(pin, state)
+            clean_name: Text = re.sub(r'\W+', '', name)
         else:
             GPIO.output(zone, state)
+            clean_name: Text = re.sub(r'\W+', '', self.get_pin_to_name(zone))
 
-    def get_pin_zone(self, name: Text) -> int:
+        response = set_irrigation_ha(state='on' if state else 'off', entity="input_boolean.irrigation")
+        log.debug(response)
+        entity = f"input_boolean.irrigation_{clean_name}".lower()
+        response = set_irrigation_ha(state='on' if state else 'off', entity=entity)
+        log.debug(response)
+
+    def get_name_to_pin(self, name: Text) -> int:
         if name == self.name_vegetable:
             return self.pin_vegetable
         elif name == self.name_front:
             return self.pin_front
         elif name == self.name_back:
             return self.pin_back
+
+    def get_pin_to_name(self, pin: int) -> Text:
+        if pin == self.pin_vegetable:
+            return self.name_vegetable
+        elif pin == self.pin_front:
+            return self.name_front
+        elif pin == self.pin_back:
+            return self.name_back
 
     def stop_all(self) -> NoReturn:
         for zone in [self.pin_vegetable, self.pin_front, self.pin_back]:

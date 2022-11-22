@@ -11,6 +11,7 @@ from procamora_utils.logger import get_logging, logging
 from telebot import TeleBot
 
 from controller import Controller
+# from ha import get_irrigation_ha, set_irrigation_ha
 
 if sys.platform == 'darwin':
     log: logging = get_logging(verbose=True, name='gpio')
@@ -66,14 +67,15 @@ def main():
     log.debug(f'{pin} => {arg.active}')
 
     log.debug(controller.get_status())
+    # set_irrigation_ha(state='on' if arg.active else 'off')
     controller.set_pin_zone(pin, arg.active)
     log.debug(controller.get_status())
     if arg.notify:
         try:
             config: configparser.ConfigParser = configparser.ConfigParser()
             config.read(Path(Path(__file__).resolve().parent, "settings.cfg"))
-            notifications: configparser.SectionProxy = config["NOTIFICATIONS"]
 
+            notifications: configparser.SectionProxy = config["NOTIFICATIONS"]
             bot: TeleBot = TeleBot(notifications.get('BOT_TOKEN'))
             bot.send_message(int(notifications.get('ADMIN')), f'{arg.zone}({pin}) => {arg.active}',
                              disable_notification=True)

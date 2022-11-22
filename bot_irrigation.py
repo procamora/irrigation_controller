@@ -275,7 +275,7 @@ def check_port(message: types.Message, action: Text, other: Text = None) -> NoRe
         return
 
     if action == 'get':
-        pin_zone: int = controller.get_pin_zone(message.text)
+        pin_zone: int = controller.get_name_to_pin(message.text)
         status_zone: bool = controller.is_active(pin_zone)
         bot.reply_to(message, f'get({message.text}) => {status_zone}', reply_markup=get_markup_cmd())
     elif action == 'set':
@@ -432,8 +432,7 @@ def daemon_gcalendar() -> NoReturn:
 
 
 def main():
-    d = threading.Thread(target=daemon_gcalendar, name='irrigation_controler_daemon')
-    d.setDaemon(True)
+    d = threading.Thread(target=daemon_gcalendar, name='irrigation_controler_daemon', daemon=True)
     d.start()
 
     try:
