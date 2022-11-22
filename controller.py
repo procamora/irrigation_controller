@@ -16,14 +16,16 @@ else:  # raspberry
 
 try:
     import RPi.GPIO as GPIO
+
+    GPIO.setwarnings(False)
 except RuntimeError:
     log.critical("Error importing RPi.GPIO!  This is probably because you need superuser privileges.\n"
                  "You can achieve this by using 'sudo' to run your script")
 
+
 # pinout  # bash
 # sudo raspi-gpio get
 # gpio readall  # bash  # gpio: command not found
-GPIO.setwarnings(False)
 
 
 @dataclass
@@ -77,11 +79,14 @@ class Controller:
         log.debug(response)
 
     def get_name_to_pin(self, name: Text) -> int:
-        if name == self.name_vegetable:
+        if name == self.name_vegetable \
+                or re.sub(r'\W+', '', name).lower() == re.sub(r'\W+', '', self.name_vegetable).lower():
             return self.pin_vegetable
-        elif name == self.name_front:
+        elif name == self.name_front \
+                or re.sub(r'\W+', '', name).lower() == re.sub(r'\W+', '', self.name_front).lower():
             return self.pin_front
-        elif name == self.name_back:
+        elif name == self.name_back \
+                or re.sub(r'\W+', '', name).lower() == re.sub(r'\W+', '', self.name_back).lower():
             return self.pin_back
 
     def get_pin_to_name(self, pin: int) -> Text:
