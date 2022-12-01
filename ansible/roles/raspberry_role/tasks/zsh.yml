@@ -1,1 +1,90 @@
-#    owner: "{{ procamora_user }}"
+---
+
+- name: Custom_workspace | Copy config to {{ main_user }}
+  copy:
+    src: "~/{{ item }}"
+    dest: "/home/{{ main_user }}/{{ item }}"
+    remote_src: no
+    force: yes
+    owner: "{{ main_user }}"
+  loop:
+    - .p10k.zsh
+    - .vimrc
+    - .zshrc
+    - .oh-my-zsh/
+    - .vim/
+    - .tmux/
+
+- name: Custom_workspace | Set permissions {{ main_user }}
+  file:
+    path: "/home/{{ main_user }}/{{ item }}"
+    owner: "{{ main_user }}"
+    group: "{{ main_user }}"
+    recurse: yes
+  loop:
+    - .p10k.zsh
+    - .vimrc
+    - .zshrc
+    - .oh-my-zsh/
+    - .vim/
+    - .tmux/
+
+- name: Custom_workspace | Copy config {{ main_user }} to root
+  copy:
+    src: "/home/{{ main_user }}/{{ item }}"
+    dest: "/root/{{ item }}"
+    remote_src: yes
+    force: yes
+    owner: root
+  loop:
+    - .p10k.zsh
+    - .vimrc
+    - .zshrc
+    - .oh-my-zsh/
+    - .vim/
+    - .tmux/
+
+##- name: Custom_workspace | Disable SeLinux in runtime
+##  shell: setenforce 0
+##  when: ansible_os_family == 'RedHat'
+#
+#- name: Custom_workspace | Disable SeLinux in runtime
+#  ansible.posix.selinux:
+#    state: permissive
+#    policy: targeted
+##  ignore_errors: true
+#  when: ansible_os_family == 'RedHat'
+#
+#- name: Custom_workspace | Git clone custom_workspace
+#  git:
+#    repo: "https://github.com/procamora/custom_workspace.git"
+#    dest: "{{ path_custom_worspace }}"
+#    force: yes
+#  #ignore_errors: true
+#  register: _clone
+#
+#- name: Custom_workspace | Set permission dotfiles
+#  file:
+#    path: "{{ path_custom_worspace }}"
+#    state: directory
+#    recurse: yes
+#    owner: "{{ main_user }}"
+#  when: _clone.changed
+#
+#- name: Custom_workspace | Install custom_workspace install vim
+#  shell: bash custom_workspace.sh vim >output.log
+##  become: yes
+##  become_method: sudo
+#  become_user: "{{ main_user }}"
+#  args:
+#    chdir: "{{ path_custom_worspace }}"
+#  when: _clone.changed
+#
+#- name: Custom_workspace | Install custom_workspace install zsh
+#  shell: bash custom_workspace.sh zsh >output.log
+##  become: yes
+##  become_method: sudo
+#  become_user: "{{ main_user }}"
+#  args:
+#    chdir: "{{ path_custom_worspace }}"
+#  when: _clone.changed

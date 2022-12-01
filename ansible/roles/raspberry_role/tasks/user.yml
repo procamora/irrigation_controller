@@ -2,17 +2,17 @@
 
 - name: Users | Create main group
   group:
-    name: "{{ procamora_user }}"
+    name: "{{ main_user }}"
     state: present
 
 # group gpio for non use root to access a gpio (need reboot for apply change)
 - name: Users | Create main user
   user:
-    name: "{{ procamora_user }}"
-    password: "{{ procamora_pass | password_hash('sha512') }}"
+    name: "{{ main_user }}"
+    password: "{{ main_pass | password_hash('sha512') }}"
     shell: /bin/bash
     groups: adm, dialout, sudo, plugdev, gpio
-    group: "{{ procamora_user }}"
+    group: "{{ main_user }}"
     append: yes
     force: yes
     comment: "Default user"
@@ -20,37 +20,50 @@
   register: _create_user
 
 
-- name: Irrigation | Create ~/.ssh
+- name: Users | Create ~/.ssh
   ansible.builtin.file:
-    path: "/home/{{ procamora_user }}/.ssh/"
+    path: "/home/{{ main_user }}/.ssh/"
     state: directory
     mode: '0700'
-    owner: "{{ procamora_user }}"
-    group: "{{ procamora_user }}"
+    owner: "{{ main_user }}"
+    group: "{{ main_user }}"
 
-- name: Users | Copy public key in ~/.ssh
+- name: Users | Copy public key in ~/.ssh/authorized_keys
   copy:
-    src: ~/.ssh/services.pub
-    dest: "/home/{{ procamora_user }}/.ssh/authorized_keys"
+    src: ~/.ssh/id_ed25519_services.pub
+    dest: "/home/{{ main_user }}/.ssh/authorized_keys"
     mode: 0600
-    owner: "{{ procamora_user }}"
-    group: "{{ procamora_user }}"
+    owner: "{{ main_user }}"
+    group: "{{ main_user }}"
     remote_src: no
+
+- name: Users | Copy keys in ~/.ssh
+  copy:
+    src: "~/.ssh/{{ item }}"
+    dest: "/home/{{ main_user }}/.ssh/{{ item }}"
+    mode: 0600
+    owner: "{{ main_user }}"
+    group: "{{ main_user }}"
+    remote_src: no
+  loop:
+    - id_ed25519_services.pub
+    - id_ed25519_services
+
 
 #- name: Main | Set user in sudoers
 #  lineinfile:
-#    path: "/etc/sudoers.d/{{ procamora_user }}"
+#    path: "/etc/sudoers.d/{{ main_user }}"
 #    state: present
-#    regexp: '^{{ procamora_user }}'
-#    line: '{{ procamora_user }} ALL=(ALL) NOPASSWD: ALL'
+#    regexp: '^{{ main_user }}'
+#    line: '{{ main_user }} ALL=(ALL) NOPASSWD: ALL'
 #    backrefs: no
 #    create: yes
 #    validate: 'visudo -cf %s'
 
-- name: Users | Copy {{ procamora_user }} in sudoers.d/
+- name: Users | Copy {{ main_user }} in sudoers.d/
   template:
     src: procamora.sudoers.j2
-    dest: "/etc/sudoers.d/{{ procamora_user }}"
+    dest: "/etc/sudoers.d/{{ main_user }}"
     mode: 0660
     validate: 'visudo -cf %s'
 

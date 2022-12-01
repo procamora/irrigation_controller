@@ -30,17 +30,17 @@
   include_tasks: user.yml
 
 # todo ok
-#- name: Main | Install motd
-#  include_tasks: motd.yml
+- name: Main | Install motd
+  include_tasks: motd.yml
 
-#- name: Main | Install custom_workspace
-#  include_tasks: zsh.yml
+- name: Main | Install zsh
+  include_tasks: zsh.yml
 
 
 #- name: Copy Complete directory
 #  copy:
-#    src: "{{ playbook_dir }}/../"
-#    dest: "/home/{{ procamora_user }}/test/"
+#    src: "{{ playbook_dir }}/../"2
+#    dest: "/home/{{ main_user }}/test/"
 #    remote_src: no
 #    directory_mode: yes
 

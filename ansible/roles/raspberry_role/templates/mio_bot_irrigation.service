@@ -5,7 +5,7 @@ After=multi-user.target
 [Service]
 Type=idle
 ExecStart=/usr/bin/python3 {{ irrigation_path }}/bot_irrigation.py >> {{ irrigation_path }}/bot.log 2>&1
-User={{ procamora_user }}
+User={{ main_user }}
 
 [Install]
 WantedBy=multi-user.target

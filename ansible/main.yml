@@ -23,6 +23,6 @@
 #  post_tasks:
 #    - name: Main | Remove user in sudoers
 #      file:
-#        path: "/etc/sudoers.d/{{ procamora_user }}"
+#        path: "/etc/sudoers.d/{{ main_user }}"
 #        state: absent
 

@@ -11,5 +11,5 @@ default_interface: eth0  # firewalld
 default_zone: internal  # firewalld
 default_zone_trusted: trusted  # firewalld
 
-irrigation_path: "/home/{{ procamora_user }}/irrigation_controller"
+irrigation_path: "/home/{{ main_user }}/irrigation_controller"
 repo_tar: irrigation.tar.gz
