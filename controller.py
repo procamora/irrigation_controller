@@ -77,6 +77,9 @@ class Controller:
             log.info(state)
             response = set_irrigation_ha(state='on' if state else 'off', entity="input_boolean.irrigation")
             log.debug(response)
+        else:
+            response = set_irrigation_ha(state='on' if state else 'off', entity="input_boolean.irrigation")
+            log.debug(response)
 
         entity = f"input_boolean.irrigation_{clean_name}".lower()
         response = set_irrigation_ha(state='on' if state else 'off', entity=entity)
