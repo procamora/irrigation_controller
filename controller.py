@@ -72,8 +72,10 @@ class Controller:
             GPIO.output(zone, state)
             clean_name: Text = re.sub(r'\W+', '', self.get_pin_to_name(zone))
 
-        response = set_irrigation_ha(state='on' if state else 'off', entity="input_boolean.irrigation")
-        log.debug(response)
+        if state == 'off' and not self.is_any_active():
+            response = set_irrigation_ha(state='on' if state else 'off', entity="input_boolean.irrigation")
+            log.debug(response)
+
         entity = f"input_boolean.irrigation_{clean_name}".lower()
         response = set_irrigation_ha(state='on' if state else 'off', entity=entity)
         log.debug(response)

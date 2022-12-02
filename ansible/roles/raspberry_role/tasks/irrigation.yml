@@ -39,6 +39,7 @@
 - name: Irrigation | Install specified python requirements
   ansible.builtin.pip:
     requirements: "{{ irrigation_path }}/requirements.txt"
+  ignore_errors: true   # RP Zero failed becasue bcrypt (manual install rust and install)
 
 #- name: Irrigation | Change permisssions /etc/cron.d/ for write group {{ main_user }}
 #  ansible.builtin.file:

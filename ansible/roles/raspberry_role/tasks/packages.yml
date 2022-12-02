@@ -14,6 +14,8 @@
     - name: Packages | Install packages with apt
       apt:
         name:
+          - build-essential
+          - cargo
           - netcat
           - vim
           - wget

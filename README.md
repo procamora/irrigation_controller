@@ -36,6 +36,20 @@ ansible-playbook -i inventory main.yml -v
 ```
 
 
+# ERROR: Failed building wheel for bcrypt (error: Rust 1.48.0 does not match extension requirement >=1.56.0)
+
+si falla al ejecutar pip3 install -r requirements.txt
+
+```bash
+# https://www.how2shout.com/linux/how-to-install-and-use-rust-on-debian-11-bullseye/
+ rustc --version # => rustc 1.48.0 (471d696c7 2020-12-10)
+
+curl https://sh.rustup.rs -sSf | sh
+source "$HOME/.cargo/env"
+rustc --version # =>  rustc 1.65.0 (897e37553 2022-11-02)
+```
+
+
 
 ```
 """commands
