@@ -80,9 +80,9 @@ class Controller:
         if not state and not self.is_any_active()[0]:
             response = set_irrigation_ha(state='on' if state else 'off', entity="input_boolean.irrigation")
             log.debug(response)
-        else:
-            response = set_irrigation_ha(state='on' if state else 'off', entity="input_boolean.irrigation")
-            log.debug(response)
+        # else:
+        #     response = set_irrigation_ha(state='on' if state else 'off', entity="input_boolean.irrigation")
+        #     log.debug(response)
 
         entity = f"input_boolean.irrigation_{clean_name}".lower()
         response = set_irrigation_ha(state='on' if state else 'off', entity=entity)
