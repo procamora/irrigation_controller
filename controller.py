@@ -74,6 +74,8 @@ class Controller:
 
         log.warning(self.is_any_active())
         log.warning(state)
+        log.warning(f'{not state} and {not self.is_any_active()[0]}')
+        log.warning(not state and not self.is_any_active()[0])
 
         if not state and not self.is_any_active()[0]:
             response = set_irrigation_ha(state='on' if state else 'off', entity="input_boolean.irrigation")
