@@ -73,6 +73,8 @@ class Controller:
             clean_name: Text = re.sub(r'\W+', '', self.get_pin_to_name(zone))
 
         if state == 'off' and not self.is_any_active():
+            log.info(self.is_any_active())
+            log.info(state)
             response = set_irrigation_ha(state='on' if state else 'off', entity="input_boolean.irrigation")
             log.debug(response)
 
