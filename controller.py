@@ -44,7 +44,7 @@ class Controller:
         # self.gpio.setmode(gpio.BCM)  # numeración del chip BROADCOM (GPIO17)
         # initial no se puede poner, porque si no cada vez que se instancia controller se ponen todos a false
         # GPIO.setup([self.pin_vegetable, self.pin_front, self.pin_back], GPIO.OUT, initial=GPIO.LOW)
-        GPIO.setup([self.pin_vegetable, self.pin_front, self.pin_back], GPIO.OUT)
+        GPIO.setup([self.pin_vegetable, self.pin_front, self.pin_back, 13], GPIO.OUT)
 
     def get_status(self) -> Dict[Text, bool]:
         return {
