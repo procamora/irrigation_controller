@@ -1,26 +1,19 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 import re
-from dataclasses import dataclass
-from typing import Dict, Text, NoReturn, Tuple
+from dataclasses import dataclass, field
+from typing import Dict, Text, NoReturn, Tuple, List, Any
 import sys
-
+# import configparser
+# from pathlib import Path
 from procamora_utils.logger import get_logging, logging
 
-from ha import get_irrigation_ha, set_irrigation_ha
+from ha import get_irrigation_ha, set_irrigation_ha, get_all_irrigation_ha
 
 if sys.platform == 'darwin':
     log: logging = get_logging(verbose=True, name='gpio')
 else:  # raspberry
     log: logging = get_logging(verbose=False, name='gpio')
-
-try:
-    import RPi.GPIO as GPIO
-
-    GPIO.setwarnings(False)
-except RuntimeError:
-    log.critical("Error importing RPi.GPIO!  This is probably because you need superuser privileges.\n"
-                 "You can achieve this by using 'sudo' to run your script")
 
 
 # pinout  # bash
@@ -30,98 +23,84 @@ except RuntimeError:
 
 @dataclass
 class Controller:
-    name_vegetable: Text = "Vegetable 🍅"
-    name_front: Text = "Front Garden 🌴"
-    name_back: Text = "Back Garden 🌵"
-    pin_vegetable: int = 10
-    pin_front: int = 12
-    pin_back: int = 11
+    back_left: Dict = field(default_factory=dict)
+    back_right: Dict = field(default_factory=dict)
+    front: Dict = field(default_factory=dict)
+    vegetable: Dict = field(default_factory=dict)
 
     def __post_init__(self):
-        print(GPIO.RPI_INFO)
-        # GPIO.setwarnings(False)
-        GPIO.setmode(GPIO.BOARD)  # numeración exterior de los pines (11)
-        # self.gpio.setmode(gpio.BCM)  # numeración del chip BROADCOM (GPIO17)
-        # initial no se puede poner, porque si no cada vez que se instancia controller se ponen todos a false
-        # GPIO.setup([self.pin_vegetable, self.pin_front, self.pin_back], GPIO.OUT, initial=GPIO.LOW)
-        GPIO.setup([self.pin_vegetable, self.pin_front, self.pin_back, 13], GPIO.OUT)
+        self.all_switchs: List[Dict[Text, Any]] = get_all_irrigation_ha(prefix_entity="switch.irrigation")
+
+        for i in self.all_switchs:
+            if re.search(r'Back Garden Left', i['friendly_name'], re.IGNORECASE):
+                self.back_left.update({'id': i['entity_id'], 'name': i['friendly_name']})
+            elif re.search(r'Back Garden Right', i['friendly_name'], re.IGNORECASE):
+                self.back_right.update({'id': i['entity_id'], 'name': i['friendly_name']})
+            elif re.search(r'Front Garden', i['friendly_name'], re.IGNORECASE):
+                self.front.update({'id': i['entity_id'], 'name': i['friendly_name']})
+            elif re.search(r'Vegetable', i['friendly_name'], re.IGNORECASE):
+                self.vegetable.update({'id': i['entity_id'], 'name': i['friendly_name']})
+
+        if 'id' not in self.back_left or 'id' not in self.back_right or 'id' not in self.front or 'id' not in self.vegetable:
+            log.critical('[-] Failed get variables HA')
+            log.error(self)
+            sys.exit(134)
 
     def get_status(self) -> Dict[Text, bool]:
-        return {
-            self.name_vegetable: self.is_active(self.pin_vegetable),
-            self.name_front: self.is_active(self.pin_front),
-            self.name_back: self.is_active(self.pin_back),
-        }
+        response: Dict = {}
+        # all_switchs: List[Dict[Text, Any]] = get_all_irrigation_ha(prefix_entity="switch.irrigation")
+        _ = list(map(lambda e: response.update({e['friendly_name']: e['state']}), self.all_switchs))
 
-    @staticmethod
-    def is_active(zone: int) -> bool:
-        return GPIO.input(zone)
+        return response
 
     def is_any_active(self) -> Tuple[bool, Dict]:
         status: Dict = self.get_status()
-        return True in status.values(), status
+        return 'on' in status.values(), status
 
-    def set_pin_zone(self, zone: int, state: bool = False, name: Text = '') -> NoReturn:
-        if zone == 0:
-            pin: int = self.get_name_to_pin(name)
-            log.debug(f'zone: {zone}, name: {name}, pin:{pin}, state:{state}')
-            re.search('', name, re.IGNORECASE)
-            GPIO.output(pin, state)
-            clean_name: Text = re.sub(r'\W+', '', name)
-        else:
-            GPIO.output(zone, state)
-            clean_name: Text = re.sub(r'\W+', '', self.get_pin_to_name(zone))
+    def get_entity_id(self, friendly_name: Text) -> Text:
+        # all_switchs: List[Dict[Text, Any]] = get_all_irrigation_ha(prefix_entity="switch.irrigation")
+        response: List = list(
+            filter(lambda e: re.search(friendly_name, e['friendly_name'], re.IGNORECASE), self.all_switchs))
+        # log.critical(response)
+        return response[0]['entity_id']
 
-        log.warning(self.is_any_active())
-        log.warning(state)
-        log.warning(f'{not state} and {not self.is_any_active()[0]}')
-        log.warning(not state and not self.is_any_active()[0])
+    def get_friendly_name(self, entity_id: Text) -> Text:
+        # all_switchs: List[Dict[Text, Any]] = get_all_irrigation_ha(prefix_entity="switch.irrigation")
+        response: List = list(filter(lambda e: e['entity_id'] == entity_id, self.all_switchs))
+        # log.critical(response)
+        return response[0]['friendly_name']
 
-        if not state and not self.is_any_active()[0]:
-            response = set_irrigation_ha(state='off', entity="input_boolean.irrigation")
-            log.debug(response)
-        elif state:
-            response = set_irrigation_ha(state='on', entity="input_boolean.irrigation")
-            log.debug(response)
-        #     response = set_irrigation_ha(state='on' if state else 'off', entity="input_boolean.irrigation")
-        #     log.debug(response)
+    def set_state(self, entity_id: Text = '', state: Text = 'off', friendly_name: Text = '') -> NoReturn:
+        if not re.search(r'^(on|off)$', str(state)):
+            log.error(f'[-] not valid state: {state} for {entity_id}({friendly_name})')
+            return
 
-        entity = f"input_boolean.irrigation_{clean_name}".lower()
-        response = set_irrigation_ha(state='on' if state else 'off', entity=entity)
+        if entity_id == '':
+            entity_id: Text = self.get_entity_id(friendly_name)
+            log.debug(f'zone: {entity_id}, name: {friendly_name}, state:{state}')
+
+        response = set_irrigation_ha(state=state, entity_id=entity_id)
         log.debug(response)
 
-    def get_name_to_pin(self, name: Text) -> int:
-        if name == self.name_vegetable \
-                or re.sub(r'\W+', '', name).lower() == re.sub(r'\W+', '', self.name_vegetable).lower():
-            return self.pin_vegetable
-        elif name == self.name_front \
-                or re.sub(r'\W+', '', name).lower() == re.sub(r'\W+', '', self.name_front).lower():
-            return self.pin_front
-        elif name == self.name_back \
-                or re.sub(r'\W+', '', name).lower() == re.sub(r'\W+', '', self.name_back).lower():
-            return self.pin_back
-
-    def get_pin_to_name(self, pin: int) -> Text:
-        if pin == self.pin_vegetable:
-            return self.name_vegetable
-        elif pin == self.pin_front:
-            return self.name_front
-        elif pin == self.pin_back:
-            return self.name_back
-
     def stop_all(self) -> NoReturn:
-        for zone in [self.pin_vegetable, self.pin_front, self.pin_back]:
-            self.set_pin_zone(zone, False)
+        if self.is_any_active():
+            # all_switchs: List[Dict[Text, Any]] = get_all_irrigation_ha(prefix_entity="switch.irrigation")
+            response_filter: List = list(filter(lambda e: e['state'] == 'on', self.all_switchs))
+            _ = list(map(lambda e: self.set_state(e['entity_id'], 'off'), response_filter))
+        else:
+            log.debug('all zones off')
 
     @staticmethod
-    def cleanup() -> NoReturn:
-        GPIO.cleanup()
+    def is_active(entity_id: Text) -> bool:
+        return get_irrigation_ha(entity_id).json()['state'].lower() == 'on'
 
 
 def main():
     controller: Controller = Controller()
     log.debug(controller.get_status())
-    controller.set_pin_zone(controller.pin_vegetable, True)
+    controller.stop_all()
+    controller.set_state(controller.back_right['id'], 'on')
+    controller.set_state(friendly_name=controller.back_left['name'], state='on')
     log.debug(controller.get_status())
     controller.stop_all()
     log.debug(controller.get_status())

@@ -123,8 +123,9 @@ class Cron:
 
 
 def main():
-    cron = Cron('test')
+    cron = Cron(user='test')
     cron.cron_to_list(Path('./cron.debug'))
+    log.info(cron.to_cron())
 
 
 if __name__ == "__main__":

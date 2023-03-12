@@ -99,8 +99,8 @@ def get_markup_cmd() -> types.ReplyKeyboardMarkup:
 
 def get_markup_zones() -> types.ReplyKeyboardMarkup:
     markup: types.ReplyKeyboardMarkup = types.ReplyKeyboardMarkup(one_time_keyboard=True)
-    markup.row(controller.name_vegetable, controller.name_front, controller.name_back)
-    # markup.row(my_commands[4])
+    markup.row(controller.back_left['name'], controller.back_right['name'])
+    markup.row(controller.front['name'], controller.vegetable['name'])
     return markup
 
 
@@ -111,13 +111,12 @@ def get_markup_status() -> types.ReplyKeyboardMarkup:
     return markup
 
 
-def get_markup_zones2() -> types.ReplyKeyboardMarkup:
-    markup: types.ReplyKeyboardMarkup = types.ReplyKeyboardMarkup(one_time_keyboard=True)
-    markup.row(controller.name_vegetable)
-    markup.row(controller.name_front)
-    markup.row(controller.name_back)
-    # markup.row(my_commands[4])
-    return markup
+# def get_markup_zones2() -> types.ReplyKeyboardMarkup:
+#     markup: types.ReplyKeyboardMarkup = types.ReplyKeyboardMarkup(one_time_keyboard=True)
+#     markup.row(controller.back_left['name'], controller.back_right['name'])
+#     markup.row(controller.front['name'], controller.vegetable['name'])
+#     # markup.row(my_commands[4])
+#     return markup
 
 
 # def get_markup_new_host(host: Any):
@@ -238,7 +237,7 @@ def send_exit(message: types.Message) -> NoReturn:
 
 @bot.message_handler(func=lambda message: message.chat.id in owner_bot, commands=[my_commands[0][1:]])
 def send_status(message: types.Message) -> NoReturn:
-    response = list([['Zone', 'Status']])
+    response = list([['Zone', 'State']])
     zones = controller.get_status()
     log.debug(zones.items())
     for zone in zones.items():
@@ -255,7 +254,7 @@ def send_get(message: types.Message) -> NoReturn:
     regex: re.Match = re.search(r'^/(?P<get>get)(@\w+)? (?P<zone>\w+)$',
                                 str(message.text).strip(), re.IGNORECASE)
     if not regex:
-        bot.reply_to(message, "get zone", reply_markup=get_markup_zones2())
+        bot.reply_to(message, "get zone", reply_markup=get_markup_zones())
         bot.register_next_step_handler(message, update_pin, action='get')
     else:  # /get vegetable    or /get@domotica_pablo_bot vegetable
         message.text = regex.groupdict()['zone']
@@ -289,11 +288,11 @@ def update_pin(message: types.Message, action: Text, other: Text = None) -> NoRe
         return
 
     if action == 'get':
-        pin_zone: int = controller.get_name_to_pin(message.text)
-        status_zone: bool = controller.is_active(pin_zone)
+        entity_id: Text = controller.get_entity_id(message.text)
+        status_zone: bool = controller.is_active(entity_id)
         bot.reply_to(message, f'get({message.text}) => {status_zone}', reply_markup=get_markup_cmd())
     elif action == 'set':
-        controller.set_pin_zone(zone=0, state=(message.text.lower() == 'on'), name=other)
+        controller.set_state(state=message.text.lower(), friendly_name=other)
         # set(OFF) => Vegetable 🍅
         bot.reply_to(message, f'set({message.text}) => {other}', reply_markup=get_markup_cmd())
         send_status(message)
