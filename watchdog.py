@@ -34,8 +34,10 @@ def main():
             config.read(Path(Path(__file__).resolve().parent, "settings.cfg"))
             notifications: configparser.SectionProxy = config["NOTIFICATIONS"]
 
+            filter_status = list(filter(lambda e: e[1] == 'on', status.items()))
+
             bot: TeleBot = TeleBot(notifications.get('BOT_TOKEN'))
-            bot.send_message(int(notifications.get('ADMIN')), f'watchdog => {status}',
+            bot.send_message(int(notifications.get('GROUP')), f'‼️ WATCHDOG => {filter_status} ‼️',
                              disable_notification=disable_notification)
         except Exception as err:
             log.critical(f'Error: {err}')
