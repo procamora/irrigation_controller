@@ -15,8 +15,14 @@ if sys.platform == 'darwin':
 else:  # raspberry
     log: logging = get_logging(verbose=False, name='ha')
 
+FILE_CONFIG: Path = Path(Path(__file__).resolve().parent, "settings.cfg")
+if not FILE_CONFIG.exists():
+    log.critical(f'File {FILE_CONFIG} not exists and is necesary')
+    sys.exit(1)
+
 config: configparser.ConfigParser = configparser.ConfigParser()
-config.read(Path(Path(__file__).resolve().parent, "settings.cfg"))
+config.read(FILE_CONFIG)
+
 basics: configparser.SectionProxy = config["BASICS"]
 
 

@@ -25,10 +25,11 @@ def main():
     any_active: bool
     status: Dict
     any_active, status = controller.is_any_active()
+    log.debug(f'{any_active} => {status} hour({now.hour})')
     if any_active:
-        disable_notification = True
-        if now.hour == 5 or now.hour == 6 or now.hour == 7 or now.hour == 8:
-            disable_notification = False
+        disable_notification = False
+        if 5 <= now.hour <= 8:
+            disable_notification = True
         try:
             config: configparser.ConfigParser = configparser.ConfigParser()
             config.read(Path(Path(__file__).resolve().parent, "settings.cfg"))
