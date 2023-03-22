@@ -17,6 +17,7 @@ import time
 from pathlib import Path
 from typing import NoReturn, Tuple, Text, List, Dict
 import requests
+import psutil
 
 from procamora_utils.logger import get_logging, logging
 from requests import exceptions
@@ -446,9 +447,27 @@ def daemon_gcalendar() -> NoReturn:
         time.sleep(delay)
 
 
+def daemon_crond() -> NoReturn:
+    while True:
+        try:
+            log.debug('check crond')
+            if 'crond' not in list(map(lambda i: i.name(), psutil.process_iter())):
+                bot.send_message(owner_bot[1], f'Starting crond', reply_markup=get_markup_cmd())
+                os.system('crond')
+        except Exception as e:
+            log.error(f'Fail thread: {e}')
+            bot.send_message(owner_bot[1], f'[-] Error thread: {e}', reply_markup=get_markup_cmd())
+
+        # https://stackoverflow.com/questions/17075788/python-is-time-sleepn-cpu-intensive
+        time.sleep(240)
+
+
 def main():
-    d = threading.Thread(target=daemon_gcalendar, name='irrigation_controler_daemon', daemon=True)
-    d.start()
+    d1 = threading.Thread(target=daemon_gcalendar, name='irrigation_controler_daemon', daemon=True)
+    d1.start()
+
+    d2 = threading.Thread(target=daemon_crond, name='cron_daemon', daemon=True)
+    d2.start()
 
     try:
         bot.send_message(owner_bot[1], "Starting bot", reply_markup=get_markup_cmd(), disable_notification=True)

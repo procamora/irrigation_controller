@@ -90,18 +90,18 @@ class GCalendar:
 
         log.debug(f'Getting the upcoming {num_events} events > {len(events_result["items"])}')
         cron = Cron(user='procamora')
-        cron.command(f'# Verify service active')
-        cron.command(
-            f'systemctl -q is-active mio_bot_irrigation.service && echo YES || '
-            f'sudo /usr/bin/systemctl restart mio_bot_irrigation.service',
-            '*/10', '*', '*', '*', '*')
+        # cron.command(f'# Verify service active')
+        # cron.command(
+        #     f'systemctl -q is-active mio_bot_irrigation.service && echo YES || '
+        #     f'sudo /usr/bin/systemctl restart mio_bot_irrigation.service',
+        #     '*/10', '*', '*', '*', '*')
         cron.command(f'# Watchdog')
-        cron.command(f'python3 ~/irrigation_controller/watchdog.py', 30, '*', '*', '*', '*')
+        cron.command(f'python3 ~/watchdog.py', '*/10', '*', '*', '*', '*')
         cron.command(f'# Backup closed if open relay at sun day')
-        cron.command(f'python3 ~/irrigation_controller/controller_cli.py -e switch.irrigation_back_garden_left -s off -nn', 0, 9, '*', '*', '*')
-        cron.command(f'python3 ~/irrigation_controller/controller_cli.py -e switch.irrigation_back_garden_right -s off -nn', 0, 9, '*', '*', '*')
-        cron.command(f'python3 ~/irrigation_controller/controller_cli.py -e switch.irrigation_front_garden -s off -nn', 0, 9, '*', '*', '*')
-        cron.command(f'python3 ~/irrigation_controller/controller_cli.py -e switch.irrigation_vegetable -s off -nn', 0, 9, '*', '*', '*')
+        cron.command(f'python3 ~/controller_cli.py -e switch.irrigation_back_garden_left -s off -nn', 0, 9, '*', '*', '*')
+        cron.command(f'python3 ~/controller_cli.py -e switch.irrigation_back_garden_right -s off -nn', 0, 9, '*', '*', '*')
+        cron.command(f'python3 ~/controller_cli.py -e switch.irrigation_front_garden -s off -nn', 0, 9, '*', '*', '*')
+        cron.command(f'python3 ~/controller_cli.py -e switch.irrigation_vegetable -s off -nn', 0, 9, '*', '*', '*')
         #  /home/pi/tg/bin/telegram-cli -e 'msg domotica_pablo "/modo_automatico on 23"' >/tmp/tg_on.log 2>/tmp/tg_on_err.log
         cron.command(f'# Zones')
 
@@ -117,9 +117,9 @@ class GCalendar:
             dt_start: datetime = datetime.fromisoformat(event['start'].get('dateTime'))
             dt_end: datetime = datetime.fromisoformat(event['end'].get('dateTime'))
 
-            cron.command(f'python3 ~/irrigation_controller/controller_cli.py -f "{event["summary"]}" -s on',
+            cron.command(f'python3 ~/controller_cli.py -f "{event["summary"]}" -s on',
                          dt_start.minute, dt_start.hour, dt_start.day, dt_start.month, '*')
-            cron.command(f'python3 ~/irrigation_controller/controller_cli.py -f "{event["summary"]}" -s off',
+            cron.command(f'python3 ~/controller_cli.py -f "{event["summary"]}" -s off',
                          dt_end.minute, dt_end.hour, dt_end.day, dt_end.month, '*')
 
         return cron

@@ -9,15 +9,12 @@ LABEL License=GPLv2
 # docker system prune -a
 
 
-USER root
-WORKDIR /root
-RUN chmod 755 /root
-
 # mlocate
 RUN dnf update -y \
   && dnf install -y vim sudo curl wget util-linux-user iproute initscripts python3 git dnf-plugins-core iputils \
-    net-tools unzip bind-utils tree jq nc python3 python3-devel python3-pip \
+    net-tools unzip langpacks-en bind-utils tree jq nc python3 python3-devel python3-pip crontabs \
   && dnf clean all
+
 
 # Set the locale
 #RUN sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && \
@@ -29,12 +26,20 @@ ENV LC_ALL en_US.UTF-8
 RUN sed -i 's/^LANG=.*/LANG="en_US.utf8"/' /etc/locale.conf
 
 
-RUN echo 'root:toor' | chpasswd
-#RUN chsh -s $(command -v zsh) root
+#RUN echo 'root:toor' | chpasswd
 
+#RUN echo "*/1  *  *  *  * procamora    python3 /data/watchdog.py" | tee -a /etc/crontab
 
-COPY requirements.txt ./
-RUN pip3 install -r ./requirements.txt
+COPY requirements.txt /tmp/
+RUN pip3 install -r /tmp/requirements.txt
+
+RUN useradd -s /bin/bash --no-log-init -m -U -u 1000 --home /data procamora \
+    && chown -R procamora /data \
+    && echo 'procamora ALL=(ALL) NOPASSWD: /usr/bin/tee, /usr/sbin/crond' | tee -a /etc/sudoers.d/procamora
+USER procamora
+WORKDIR /data
+#RUN chmod 755 /data
+
 COPY *.py ./
 COPY cron.j2 ./
 RUN ls ./*
@@ -45,6 +50,6 @@ EXPOSE 22
 #ENV TG_BOT_TOKEN=sdfsdfsdfsdfsdfsdfsdf
 #ENV TG_BOT_DEBUG_TOKEN=sdfsdfsdfsdfsdfsdfsdf
 
-COPY ./entrypoint.sh /root
+COPY ./entrypoint.sh /data
 ENTRYPOINT ["./entrypoint.sh"]
 
