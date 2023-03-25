@@ -1,4 +1,5 @@
-version: 2.1  # https://circleci.com/docs/2.0/adv-config/
+version: 2.1
+
 jobs:
   shellcheck:
     docker:
@@ -8,8 +9,8 @@ jobs:
       - run:
           name: Check Scripts
           command: |
-            find . -type f -name '*.sh' | wc -l
-            find . -type f -name '*.sh' -exec shellcheck --external-sources {} \;
+            echo "Number of shell scripts found: $(find . -type f -name '*.sh' | wc -l)"
+            find . -type f -name '*.sh' -exec shellcheck --external-sources {} +
 
   yamllint:
     docker:
@@ -18,18 +19,19 @@ jobs:
       - checkout
       - run:
           name: Install YamlLint
-          command: pip install --user yamllint
+          command: pip install yamllint
       - run:
           name: Run YamlLint
           command: |
-            export PATH=/home/circleci/.local/bin:$PATH
-            wget -q https://gist.githubusercontent.com/procamora/a8e68a2067003994581562e35e364ade/raw/87940e46599fc8f680e4b42f6ddbca0dddad0802/my_relased.yml
-            yamllint -c ./my_relased.yml . > ./output
-            cat ./output
-            grep -q "error" ./output && (echo "detect error" && cat ./output && exit 1) || exit 0
+            wget -q https://gist.githubusercontent.com/procamora/a8e68a2067003994581562e35e364ade/raw/87940e46599fc8f680e4b42f6ddbca0dddad0802/my_relased.yml -O .yamllint.yml
+            yamllint -c .yamllint.yml . | tee ./output
+            if grep -q "error" ./output; then
+              echo "Errors detected"
+              cat ./output
+              exit 1
+            fi
 
   parallelism: 4
-
 
 workflows:
   version: 2
@@ -37,14 +39,14 @@ workflows:
     jobs:
       - shellcheck:
           filters:
-            branches: # only run shellcheck on branchs
+            branches:
               only:
                 - main
                 - master
                 - dev
       - yamllint:
           filters:
-            branches: # only run shellcheck on branchs
+            branches:
               only:
                 - main
                 - master
