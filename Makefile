@@ -15,11 +15,11 @@ build: ## Build a dockerimage
 	@docker build --tag "$(TAG)" -f ./Dockerfile .
 
 run:
-	@docker run --privileged -ti --rm --hostname="$(NAME)" \
+	@docker run --privileged -ti --rm  \
 	  -v ${PWD}/settings.cfg:/data/settings.cfg \
 	  -v ${PWD}/token.json:/data/token.json \
 	  -v ${PWD}/credentials.json:/data/credentials.json \
-      -p 4772:22 --name "$(NAME)" "$(TAG)"
+      -p 4772:22 --name "$(NAME)" --hostname="$(NAME)" "$(TAG)"
 
 help: ## Print this help.
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'

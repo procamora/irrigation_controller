@@ -36,7 +36,7 @@ def get_all_irrigation_ha(prefix_entity: Text = "switch.irrigation") -> List[Dic
         "Authorization": f"Bearer {basics['TOKEN_HA']}",
         "content-type": "application/json",
     }
-    response: requests.Response = get(url, headers=headers)
+    response: requests.Response = get(url, headers=headers, verify=False)
     if response.status_code != 200:
         log.debug(response)
 
@@ -57,7 +57,7 @@ def get_irrigation_ha(entity_id: Text) -> requests.Response:
         "Authorization": f"Bearer {basics['TOKEN_HA']}",
         "content-type": "application/json",
     }
-    response: requests.Response = get(url, headers=headers)
+    response: requests.Response = get(url, headers=headers, verify=False)
     if response.status_code != 200:
         log.debug(response)
     return response
@@ -70,7 +70,7 @@ def set_irrigation_ha(state: Text, entity_id):
         "content-type": "application/json",
     }
 
-    response: requests.Response = post(url, headers=headers, json={"entity_id": entity_id})
+    response: requests.Response = post(url, headers=headers, json={"entity_id": entity_id}, verify=False)
     if response.status_code != 200:
         log.info(url)
         log.info({"entity_id": entity_id})
