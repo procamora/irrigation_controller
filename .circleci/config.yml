@@ -34,7 +34,6 @@ jobs:
 
 workflows:
   version: 2
-  parallelism: 4
   check-build:
     jobs:
       - shellcheck:
