@@ -31,10 +31,10 @@ jobs:
               exit 1
             fi
 
-  parallelism: 4
 
 workflows:
   version: 2
+  parallelism: "4"
   check-build:
     jobs:
       - shellcheck:
