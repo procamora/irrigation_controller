@@ -1,4 +1,4 @@
-version: 2  # https://circleci.com/docs/2.0/adv-config/
+version: 2.1  # https://circleci.com/docs/2.0/adv-config/
 jobs:
   shellcheck:
     docker:
@@ -10,6 +10,7 @@ jobs:
           command: |
             find . -type f -name '*.sh' | wc -l
             find . -type f -name '*.sh' -exec shellcheck --external-sources {} \;
+
   yamllint:
     docker:
       - image: cimg/python:3.11
@@ -25,7 +26,11 @@ jobs:
             wget -q https://gist.githubusercontent.com/procamora/a8e68a2067003994581562e35e364ade/raw/87940e46599fc8f680e4b42f6ddbca0dddad0802/my_relased.yml
             yamllint -c ./my_relased.yml . > ./output
             cat ./output
-            grep -q "error" ./output && (echo "detect error" && exit 1) || exit 0
+            grep -q "error" ./output && (echo "detect error" && cat ./output && exit 1) || exit 0
+
+  parallelism: 4
+
+
 workflows:
   version: 2
   check-build:
