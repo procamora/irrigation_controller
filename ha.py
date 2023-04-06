@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 import requests
 from requests import get, post
+from urllib3.exceptions import InsecureRequestWarning
+from urllib3 import disable_warnings
 import logging
 import configparser
 from pathlib import Path
@@ -9,6 +11,8 @@ import re
 from typing import Text, Dict, Any, List
 from procamora_utils import get_logging
 import sys
+
+disable_warnings(InsecureRequestWarning)
 
 if sys.platform == 'darwin':
     log: logging = get_logging(verbose=True, name='ha')

@@ -6,4 +6,5 @@ google-auth-oauthlib
 terminaltables
 pyTelegramBotAPI
 requests
+urllib3
 psutil
