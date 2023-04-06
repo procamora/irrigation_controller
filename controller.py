@@ -48,8 +48,8 @@ class Controller:
 
     def get_status(self) -> Dict[Text, bool]:
         response: Dict = {}
-        # all_switchs: List[Dict[Text, Any]] = get_all_irrigation_ha(prefix_entity="switch.irrigation")
-        _ = list(map(lambda e: response.update({e['friendly_name']: e['state']}), self.all_switchs))
+        all_switchs: List[Dict[Text, Any]] = get_all_irrigation_ha(prefix_entity="switch.irrigation")
+        _ = list(map(lambda e: response.update({e['friendly_name']: e['state']}), all_switchs))
 
         return response
 
@@ -98,12 +98,12 @@ class Controller:
 def main():
     controller: Controller = Controller()
     log.debug(controller.get_status())
-    controller.stop_all()
-    controller.set_state(controller.back_right['id'], 'on')
-    controller.set_state(friendly_name=controller.back_left['name'], state='on')
-    log.debug(controller.get_status())
-    controller.stop_all()
-    log.debug(controller.get_status())
+    # controller.stop_all()
+    # controller.set_state(controller.back_right['id'], 'on')
+    # controller.set_state(friendly_name=controller.back_left['name'], state='on')
+    # log.debug(controller.get_status())
+    # controller.stop_all()
+    # log.debug(controller.get_status())
 
 
 if __name__ == '__main__':
