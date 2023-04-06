@@ -84,8 +84,8 @@ class Controller:
 
     def stop_all(self) -> NoReturn:
         if self.is_any_active():
-            # all_switchs: List[Dict[Text, Any]] = get_all_irrigation_ha(prefix_entity="switch.irrigation")
-            response_filter: List = list(filter(lambda e: e['state'] == 'on', self.all_switchs))
+            all_switchs: List[Dict[Text, Any]] = get_all_irrigation_ha(prefix_entity="switch.irrigation")
+            response_filter: List = list(filter(lambda e: e['state'] == 'on', all_switchs))
             _ = list(map(lambda e: self.set_state(e['entity_id'], 'off'), response_filter))
         else:
             log.debug('all zones off')
