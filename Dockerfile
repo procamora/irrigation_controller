@@ -40,8 +40,8 @@ USER procamora
 WORKDIR /data
 #RUN chmod 755 /data
 
-COPY *.py ./
-COPY cron.j2 ./
+COPY --chown=procamora --chmod=744 *.py ./
+COPY --chown=procamora cron.j2 ./
 RUN ls ./*
 
 
@@ -50,6 +50,6 @@ EXPOSE 22
 #ENV TG_BOT_TOKEN=sdfsdfsdfsdfsdfsdfsdf
 #ENV TG_BOT_DEBUG_TOKEN=sdfsdfsdfsdfsdfsdfsdf
 
-COPY ./entrypoint.sh /data
+COPY --chown=procamora ./entrypoint.sh /data
 ENTRYPOINT ["./entrypoint.sh"]
 

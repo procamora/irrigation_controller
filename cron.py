@@ -101,9 +101,9 @@ class Cron:
     def cron_to_list(file: Path) -> List[List[Text]]:
         lines: List[List[Text]] = []
         for line in file.read_text().split('\n'):
-            # -a final para solo ver las activacaiones
+            # "-s on" final para solo ver las activacaiones
             match: re.Match = re.search(
-                r'^(?P<minute>\d+)( )+(?P<hour>\d+)( )+(?P<day>\d+)( )+(?P<month>\d+).*(controller_cli\.py)( )+(-\w+)( )+(?P<zone>.*)( )+-a$',
+                r'^(?P<minute>\d+)( )+(?P<hour>\d+)( )+(?P<day>\d+)( )+(?P<month>\d+).*(controller_cli\.py)( )+(-\w+)( )+(?P<zone>.*)( )+-s on$',
                 line)
             if match:
                 c = match.groupdict()

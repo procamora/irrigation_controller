@@ -242,7 +242,8 @@ def send_status(message: types.Message) -> NoReturn:
     zones = controller.get_status()
     log.debug(zones.items())
     for zone in zones.items():
-        response.append(zone)
+        z = (zone[0].replace('Irrigation ', '').strip(), zone[1])
+        response.append(z)
 
     table: AsciiTable = AsciiTable(response)
     table.justify_columns = {0: 'center', 1: 'center'}
@@ -319,7 +320,7 @@ def send_refresh(message: types.Message) -> NoReturn:
         send_events(message)
     except Exception as err:
         log.error(f'[-] Error: {err}')
-        bot.send_message(owner_bot[1], f'[-] Error GCalendar: {err}', reply_markup=get_markup_cmd())
+        bot.send_message(owner_bot[1], f'[-] Error GCalendar send_refresh: {err}', reply_markup=get_markup_cmd())
     return
 
 
@@ -421,8 +422,8 @@ def daemon_gcalendar() -> NoReturn:
     try:
         calendar: GCalendar = GCalendar()
     except Exception as err:
-        log.error(f'[-] Error GCalendar: {err}')
-        bot.send_message(owner_bot[1], f'[-] Error GCalendar: {err}', reply_markup=get_markup_cmd())
+        log.error(f'[-] Error daemon_gcalendar: {err}')
+        bot.send_message(owner_bot[1], f'[-] Error daemon_gcalendar: {err}', reply_markup=get_markup_cmd())
         time.sleep(5)
         os.kill(os.getpid(), signal.SIGUSR1)  # deberia de matar el proceso padre del thread
         log.warning('llego??')
