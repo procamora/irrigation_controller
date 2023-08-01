@@ -28,7 +28,7 @@ def main():
     log.debug(f'{any_active} => {status} hour({now.hour})')
     if any_active:
         disable_notification = False
-        if 5 <= now.hour <= 8:
+        if 5 <= now.hour <= 7 or 14 <= now.hour <= 15:
             disable_notification = True
         try:
             config: configparser.ConfigParser = configparser.ConfigParser()
