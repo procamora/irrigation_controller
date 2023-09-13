@@ -27,6 +27,7 @@ from terminaltables import AsciiTable
 from cron import Cron
 from gcalendar import GCalendar
 from controller import Controller
+from cron_refresh import get_events
 
 if sys.platform == 'darwin':
     log: logging = get_logging(verbose=True, name='bot_irrigation')
@@ -315,7 +316,7 @@ def send_off(message: types.Message) -> NoReturn:
 def send_refresh(message: types.Message) -> NoReturn:
     try:
         log.debug('get calendar and update cron')
-        get_events(GCalendar(), int(config_basic.get('NUM_EVENTS')))
+        get_events(GCalendar(), calendar_id, file_cron, int(config_basic.get('NUM_EVENTS')), bot=None, id_admin=None)
         bot.reply_to(message, "update calendars and cron", reply_markup=get_markup_cmd())
         send_events(message)
     except Exception as err:
@@ -350,38 +351,38 @@ def send_events(message: types.Message) -> NoReturn:
     return
 
 
-@bot.message_handler(func=lambda message: message.chat.id in owner_bot, content_types=["document"])
-def my_document(message: types.Message) -> NoReturn:
-    if message.document.mime_type == 'application/json':
-        try:
-            file_info: types.File = bot.get_file(message.document.file_id)
-            # bot.send_message(message.chat.id, f'https://api.telegram.org/file/bot{TOKEN}/{file_info.file_path}')
-            file: requests.Response = requests.get(
-                f'https://api.telegram.org/file/bot{bot.token}/{file_info.file_path}')
-            torrent_file: Path = Path(Path(__file__).resolve().parent, 'credentials_aux.json')
-            torrent_file.write_bytes(file.content)
-        except Exception as err:
-            log.error(f'[-] Error: {err}')
-            bot.reply_to(message, f'[-] Error file json: {err}', reply_markup=get_markup_cmd())
-            return
-
-        try:
-            arr: Dict = json.loads(torrent_file.read_text())
-            if 'web' not in arr.keys():
-                bot.reply_to(message, f'[-] Error credentials: not valid json', reply_markup=get_markup_cmd())
-                return
-        except Exception as err:
-            log.error(f'[-] Error: {err}')
-            bot.reply_to(message, f'[-] Error json: {err}', reply_markup=get_markup_cmd())
-            return
-
-        bot.reply_to(message, f'{type(file.content)}', reply_markup=get_markup_cmd())
-        bot.reply_to(message, f'Download torrent: "{message.document.file_name}"', reply_markup=get_markup_cmd())
-        # send_show_torrent(message)
-    else:
-        bot.reply_to(message, f'not implemented type: "{message.document.mime_type}"',
-                     reply_markup=get_markup_cmd())
-    return  # solo esta puesto para que no falle la inspeccion de codigo
+# @bot.message_handler(func=lambda message: message.chat.id in owner_bot, content_types=["document"])
+# def my_document(message: types.Message) -> NoReturn:
+#     if message.document.mime_type == 'application/json':
+#         try:
+#             file_info: types.File = bot.get_file(message.document.file_id)
+#             # bot.send_message(message.chat.id, f'https://api.telegram.org/file/bot{TOKEN}/{file_info.file_path}')
+#             file: requests.Response = requests.get(
+#                 f'https://api.telegram.org/file/bot{bot.token}/{file_info.file_path}')
+#             torrent_file: Path = Path(Path(__file__).resolve().parent, 'credentials_aux.json')
+#             torrent_file.write_bytes(file.content)
+#         except Exception as err:
+#             log.error(f'[-] Error: {err}')
+#             bot.reply_to(message, f'[-] Error file json: {err}', reply_markup=get_markup_cmd())
+#             return
+#
+#         try:
+#             arr: Dict = json.loads(torrent_file.read_text())
+#             if 'web' not in arr.keys():
+#                 bot.reply_to(message, f'[-] Error credentials: not valid json', reply_markup=get_markup_cmd())
+#                 return
+#         except Exception as err:
+#             log.error(f'[-] Error: {err}')
+#             bot.reply_to(message, f'[-] Error json: {err}', reply_markup=get_markup_cmd())
+#             return
+#
+#         bot.reply_to(message, f'{type(file.content)}', reply_markup=get_markup_cmd())
+#         bot.reply_to(message, f'Download torrent: "{message.document.file_name}"', reply_markup=get_markup_cmd())
+#         # send_show_torrent(message)
+#     else:
+#         bot.reply_to(message, f'not implemented type: "{message.document.mime_type}"',
+#                      reply_markup=get_markup_cmd())
+#     return  # solo esta puesto para que no falle la inspeccion de codigo
 
 
 @bot.message_handler(func=lambda message: message.chat.id in owner_bot)
@@ -398,20 +399,6 @@ def handler_others(message: types.Message) -> NoReturn:
                  f'As far as you know, it disappears -.- {str(message)}'
     bot.reply_to(message, text, reply_markup=get_markup_cmd())
     return
-
-
-def get_events(calendar: GCalendar, num_events: int):
-    cron: Cron = calendar.get_irrigation(calendar_id, num_events)
-    if cron is not None:
-        write: bool
-        stdout: Text
-        stderr: Text
-        write, stdout, stderr = cron.write(file_cron)  # Permiso admin para escribir
-        if write:
-            if len(stderr) != 0:
-                bot.send_message(owner_bot[1], f'[+] stderr: {stderr}', reply_markup=get_markup_cmd())
-            if len(stdout) != 0:
-                bot.send_message(owner_bot[1], f'[+] stdout: {stdout}', reply_markup=get_markup_cmd())
 
 
 def daemon_gcalendar() -> NoReturn:
@@ -437,7 +424,7 @@ def daemon_gcalendar() -> NoReturn:
         # ya que seguiria ejecutandose en siguientes iteraciones
         try:
             log.debug('get calendar and update cron')
-            get_events(calendar, num_events)
+            get_events(GCalendar(), calendar_id, file_cron, num_events, bot=None, id_admin=None)
         except Exception as e:
             log.error(f'Fail thread: {e}')
             bot.send_message(owner_bot[1], f'[-] Error thread: {e}', reply_markup=get_markup_cmd())

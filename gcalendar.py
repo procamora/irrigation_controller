@@ -97,6 +97,8 @@ class GCalendar:
         #     '*/10', '*', '*', '*', '*')
         cron.command(f'# Watchdog')
         cron.command(f'python3 ~/watchdog.py', '*/10', '*', '*', '*', '*')
+        cron.command(f'# Watchdog')
+        cron.command(f'python3 ~/cron_refresh.py', '*/30', '*', '*', '*', '*')
         cron.command(f'# Backup closed if open relay at sun day')
         cron.command(f'python3 ~/controller_cli.py -e switch.irrigation_back_garden_left -s off -nn', 0, 9, '*', '*', '*')
         cron.command(f'python3 ~/controller_cli.py -e switch.irrigation_back_garden_right -s off -nn', 0, 9, '*', '*', '*')
