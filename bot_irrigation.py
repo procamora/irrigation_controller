@@ -138,9 +138,9 @@ def get_markup_status() -> types.ReplyKeyboardMarkup:
 def send_message_safe(message: types.Message, text: Text) -> NoReturn:
     if len(text) > 4096:
         new_msg = f'{str(text)[0:4050]}\n.................\nTruncated message'
-        bot.reply_to(message, new_msg, reply_markup=get_markup_cmd(), message_thread_id=topic_bot)
+        bot.reply_to(message, new_msg, reply_markup=get_markup_cmd(), message_thread_id=message.message_thread_id)
     else:
-        bot.reply_to(message, text, reply_markup=get_markup_cmd(), message_thread_id=topic_bot)
+        bot.reply_to(message, text, reply_markup=get_markup_cmd(), message_thread_id=message.message_thread_id)
 
 
 # def report_and_repeat(message: types.Message, mac: Text, func: Callable, info: Text):
@@ -162,7 +162,8 @@ def is_response_command(message: types.Message):
         response = True
 
     if message.text == my_commands[-1]:  # exit
-        bot.reply_to(message, "Cancelled the change of description", reply_markup=get_markup_cmd(), message_thread_id=topic_bot)
+        bot.reply_to(message, "Cancelled the change of description", reply_markup=get_markup_cmd(),
+                     message_thread_id=message.message_thread_id)
     elif message.text == my_commands[-2]:  # help
         command_help(message)
     elif message.text == my_commands[0]:  # status
@@ -213,32 +214,33 @@ def is_response_command(message: types.Message):
 @bot.message_handler(commands=["start"])
 def command_start(message: types.Message) -> NoReturn:
     bot.send_message(message.chat.id, f"Welcome to the bot\nYour id is: {message.chat.id}",
-                     reply_markup=get_markup_cmd(), message_thread_id=topic_bot)
+                     reply_markup=get_markup_cmd(), message_thread_id=message.message_thread_id)
     command_system(message)
     return  # solo esta puesto para que no falle la inspeccion de codigo
 
 
 @bot.message_handler(commands=["help"])
 def command_help(message: types.Message) -> NoReturn:
-    bot.send_message(message.chat.id, "Here I will put all the options", message_thread_id=topic_bot)
+    bot.send_message(message.chat.id, "Here I will put all the options", message_thread_id=message.message_thread_id)
     markup = types.InlineKeyboardMarkup()
     itembtna = types.InlineKeyboardButton('Github', url="https://github.com/procamora/irrigation_controller")
     markup.row(itembtna)
     bot.send_message(message.chat.id, "Here I will put all the options",
-                     reply_markup=markup, message_thread_id=topic_bot)
+                     reply_markup=markup, message_thread_id=message.message_thread_id)
     return  # solo esta puesto para que no falle la inspeccion de codigo
 
 
 @bot.message_handler(commands=["system"])
 def command_system(message: types.Message) -> NoReturn:
     bot.send_message(message.chat.id, "List of available commands\nChoose an option: ",
-                     reply_markup=get_markup_cmd(), message_thread_id=topic_bot)
+                     reply_markup=get_markup_cmd(), message_thread_id=message.message_thread_id)
     return  # solo esta puesto para que no falle la inspeccion de codigo
 
 
 @bot.message_handler(func=lambda message: message.chat.id in owner_bot, commands=[my_commands[-1][1:]])
 def send_exit(message: types.Message) -> NoReturn:
-    bot.send_message(message.chat.id, "Nothing", reply_markup=get_markup_cmd(), message_thread_id=topic_bot)
+    bot.send_message(message.chat.id, "Nothing", reply_markup=get_markup_cmd(),
+                     message_thread_id=message.message_thread_id)
     return
 
 
@@ -262,7 +264,7 @@ def send_get(message: types.Message) -> NoReturn:
     regex: re.Match = re.search(r'^/(?P<get>get)(@\w+)? (?P<zone>\w+)$',
                                 str(message.text).strip(), re.IGNORECASE)
     if not regex:
-        bot.reply_to(message, "get zone", reply_markup=get_markup_zones(), message_thread_id=topic_bot)
+        bot.reply_to(message, "get zone", reply_markup=get_markup_zones(), message_thread_id=message.message_thread_id)
         bot.register_next_step_handler(message, update_pin, action='get')
     else:  # /get vegetable    or /get@domotica_pablo_bot vegetable
         message.text = regex.groupdict()['zone']
@@ -275,7 +277,7 @@ def send_set(message: types.Message) -> NoReturn:
     regex: re.Match = re.search(r'^/(?P<set>set)(@\w+)? (?P<zone>\w+) (?P<action>ON|OFF)$',
                                 str(message.text).strip(), re.IGNORECASE)
     if not regex:
-        bot.reply_to(message, "set zone", reply_markup=get_markup_zones(), message_thread_id=topic_bot)
+        bot.reply_to(message, "set zone", reply_markup=get_markup_zones(), message_thread_id=message.message_thread_id)
         bot.register_next_step_handler(message, set_status_zone, action='set')
     else:  # /set vegetable on  or /set@domotica_pablo_bot vegetable on
         message.text = regex.groupdict()['action']
@@ -287,7 +289,7 @@ def set_status_zone(message: types.Message, action: Text) -> NoReturn:
     if is_response_command(message):
         return
 
-    bot.reply_to(message, "set status", reply_markup=get_markup_status(), message_thread_id=topic_bot)
+    bot.reply_to(message, "set status", reply_markup=get_markup_status(), message_thread_id=message.message_thread_id)
     bot.register_next_step_handler(message, update_pin, action=action, other=message.text)
 
 
@@ -299,22 +301,23 @@ def update_pin(message: types.Message, action: Text, other: Text = None) -> NoRe
         entity_id: Text = controller.get_entity_id(message.text)
         status_zone: bool = controller.is_active(entity_id)
         bot.reply_to(message, f'get({message.text}) => {status_zone}',
-                     reply_markup=get_markup_cmd(), message_thread_id=topic_bot)
+                     reply_markup=get_markup_cmd(), message_thread_id=message.message_thread_id)
     elif action == 'set':
         controller.set_state(state=message.text.lower(), friendly_name=other)
         # set(OFF) => Vegetable 🍅
         bot.reply_to(message, f'set({message.text}) => {other}',
-                     reply_markup=get_markup_cmd(), message_thread_id=topic_bot)
+                     reply_markup=get_markup_cmd(), message_thread_id=message.message_thread_id)
         send_status(message)
     else:
         bot.reply_to(message, f'uknown action => {action}',
-                     reply_markup=get_markup_cmd(), message_thread_id=topic_bot)
+                     reply_markup=get_markup_cmd(), message_thread_id=message.message_thread_id)
 
 
 @bot.message_handler(func=lambda message: message.chat.id in owner_bot, commands=[my_commands[3][1:]])
 def send_off(message: types.Message) -> NoReturn:
     send_status(message)
-    bot.reply_to(message, "closed all relays", reply_markup=get_markup_cmd(), message_thread_id=topic_bot)
+    bot.reply_to(message, "closed all relays", reply_markup=get_markup_cmd(),
+                 message_thread_id=message.message_thread_id)
     controller.stop_all()
     send_status(message)
     return
@@ -325,12 +328,13 @@ def send_refresh(message: types.Message) -> NoReturn:
     try:
         log.debug('get calendar and update cron')
         get_events(GCalendar(), calendar_id, file_cron, int(config_basic.get('NUM_EVENTS')), bot=None, id_admin=None)
-        bot.reply_to(message, "update calendars and cron", reply_markup=get_markup_cmd(), message_thread_id=topic_bot)
+        bot.reply_to(message, "update calendars and cron", reply_markup=get_markup_cmd(),
+                     message_thread_id=message.message_thread_id)
         send_events(message)
     except Exception as err:
         log.error(f'[-] Error: {err}')
         bot.send_message(owner_bot[1], f'[-] Error GCalendar send_refresh: {err}',
-                         reply_markup=get_markup_cmd(), message_thread_id=topic_bot)
+                         reply_markup=get_markup_cmd(), message_thread_id=message.message_thread_id)
     return
 
 
@@ -344,13 +348,13 @@ def send_events(message: types.Message) -> NoReturn:
     except Exception as err:
         log.critical(f'[-] Error cron_to_list: {err}')
         bot.reply_to(message, f'[-] Error cron_to_list: {err}',
-                     reply_markup=get_markup_cmd(), message_thread_id=topic_bot)
+                     reply_markup=get_markup_cmd(), message_thread_id=message.message_thread_id)
         return
 
     log.debug(crons)
     if len(crons) == 0:
         bot.reply_to(message, f"no events in {str(file_cron)}",
-                     reply_markup=get_markup_cmd(), message_thread_id=topic_bot)
+                     reply_markup=get_markup_cmd(), message_thread_id=message.message_thread_id)
         return
 
     for zone in crons[0:20]:  # only 20 events, more maybe exceded limit message size
@@ -399,7 +403,7 @@ def send_events(message: types.Message) -> NoReturn:
 @bot.message_handler(func=lambda message: message.chat.id in owner_bot)
 def text_not_valid(message: types.Message) -> NoReturn:
     texto: Text = 'unknown command, enter a valid command :)'
-    bot.reply_to(message, texto, reply_markup=get_markup_cmd(), message_thread_id=topic_bot)
+    bot.reply_to(message, texto, reply_markup=get_markup_cmd(), message_thread_id=message.message_thread_id)
     return
 
 
@@ -464,6 +468,7 @@ def daemon_crond() -> NoReturn:
 
 
 def main():
+
     d1 = threading.Thread(target=daemon_gcalendar, name='irrigation_controler_daemon', daemon=True)
     d1.start()
 
