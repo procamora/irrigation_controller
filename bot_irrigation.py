@@ -49,6 +49,8 @@ FILE_CRON = /etc/cron.d/irrigation
 
 [NOTIFICATIONS]
 ADMIN = 111111
+GROUP = -111111111111
+TOPIC_IRRIGATION_ID = 234234
 BOT_TOKEN = 1069111113:AAHOk9K5TAAAAAAAAAAIY1OgA_LNpAAAAA
 
 [DEBUG]
@@ -87,6 +89,7 @@ else:
 
 owner_bot: List = list(map(lambda i: int(i), config_basic.get('ADMIN').split(',')))
 log.info(owner_bot)
+topic_bot = int(config_basic.get('TOPIC'))
 calendar_id: Text = config_basic.get('CALENDAR_ID')
 file_cron: Path = Path(config_basic.get('FILE_CRON'))
 
@@ -135,9 +138,9 @@ def get_markup_status() -> types.ReplyKeyboardMarkup:
 def send_message_safe(message: types.Message, text: Text) -> NoReturn:
     if len(text) > 4096:
         new_msg = f'{str(text)[0:4050]}\n.................\nTruncated message'
-        bot.reply_to(message, new_msg, reply_markup=get_markup_cmd())
+        bot.reply_to(message, new_msg, reply_markup=get_markup_cmd(), message_thread_id=topic_bot)
     else:
-        bot.reply_to(message, text, reply_markup=get_markup_cmd())
+        bot.reply_to(message, text, reply_markup=get_markup_cmd(), message_thread_id=topic_bot)
 
 
 # def report_and_repeat(message: types.Message, mac: Text, func: Callable, info: Text):
@@ -159,7 +162,7 @@ def is_response_command(message: types.Message):
         response = True
 
     if message.text == my_commands[-1]:  # exit
-        bot.reply_to(message, "Cancelled the change of description", reply_markup=get_markup_cmd())
+        bot.reply_to(message, "Cancelled the change of description", reply_markup=get_markup_cmd(), message_thread_id=topic_bot)
     elif message.text == my_commands[-2]:  # help
         command_help(message)
     elif message.text == my_commands[0]:  # status
@@ -210,30 +213,32 @@ def is_response_command(message: types.Message):
 @bot.message_handler(commands=["start"])
 def command_start(message: types.Message) -> NoReturn:
     bot.send_message(message.chat.id, f"Welcome to the bot\nYour id is: {message.chat.id}",
-                     reply_markup=get_markup_cmd())
+                     reply_markup=get_markup_cmd(), message_thread_id=topic_bot)
     command_system(message)
     return  # solo esta puesto para que no falle la inspeccion de codigo
 
 
 @bot.message_handler(commands=["help"])
 def command_help(message: types.Message) -> NoReturn:
-    bot.send_message(message.chat.id, "Here I will put all the options")
+    bot.send_message(message.chat.id, "Here I will put all the options", message_thread_id=topic_bot)
     markup = types.InlineKeyboardMarkup()
     itembtna = types.InlineKeyboardButton('Github', url="https://github.com/procamora/irrigation_controller")
     markup.row(itembtna)
-    bot.send_message(message.chat.id, "Here I will put all the options", reply_markup=markup)
+    bot.send_message(message.chat.id, "Here I will put all the options",
+                     reply_markup=markup, message_thread_id=topic_bot)
     return  # solo esta puesto para que no falle la inspeccion de codigo
 
 
 @bot.message_handler(commands=["system"])
 def command_system(message: types.Message) -> NoReturn:
-    bot.send_message(message.chat.id, "List of available commands\nChoose an option: ", reply_markup=get_markup_cmd())
+    bot.send_message(message.chat.id, "List of available commands\nChoose an option: ",
+                     reply_markup=get_markup_cmd(), message_thread_id=topic_bot)
     return  # solo esta puesto para que no falle la inspeccion de codigo
 
 
 @bot.message_handler(func=lambda message: message.chat.id in owner_bot, commands=[my_commands[-1][1:]])
 def send_exit(message: types.Message) -> NoReturn:
-    bot.send_message(message.chat.id, "Nothing", reply_markup=get_markup_cmd())
+    bot.send_message(message.chat.id, "Nothing", reply_markup=get_markup_cmd(), message_thread_id=topic_bot)
     return
 
 
@@ -257,7 +262,7 @@ def send_get(message: types.Message) -> NoReturn:
     regex: re.Match = re.search(r'^/(?P<get>get)(@\w+)? (?P<zone>\w+)$',
                                 str(message.text).strip(), re.IGNORECASE)
     if not regex:
-        bot.reply_to(message, "get zone", reply_markup=get_markup_zones())
+        bot.reply_to(message, "get zone", reply_markup=get_markup_zones(), message_thread_id=topic_bot)
         bot.register_next_step_handler(message, update_pin, action='get')
     else:  # /get vegetable    or /get@domotica_pablo_bot vegetable
         message.text = regex.groupdict()['zone']
@@ -270,7 +275,7 @@ def send_set(message: types.Message) -> NoReturn:
     regex: re.Match = re.search(r'^/(?P<set>set)(@\w+)? (?P<zone>\w+) (?P<action>ON|OFF)$',
                                 str(message.text).strip(), re.IGNORECASE)
     if not regex:
-        bot.reply_to(message, "set zone", reply_markup=get_markup_zones())
+        bot.reply_to(message, "set zone", reply_markup=get_markup_zones(), message_thread_id=topic_bot)
         bot.register_next_step_handler(message, set_status_zone, action='set')
     else:  # /set vegetable on  or /set@domotica_pablo_bot vegetable on
         message.text = regex.groupdict()['action']
@@ -282,7 +287,7 @@ def set_status_zone(message: types.Message, action: Text) -> NoReturn:
     if is_response_command(message):
         return
 
-    bot.reply_to(message, "set status", reply_markup=get_markup_status())
+    bot.reply_to(message, "set status", reply_markup=get_markup_status(), message_thread_id=topic_bot)
     bot.register_next_step_handler(message, update_pin, action=action, other=message.text)
 
 
@@ -293,20 +298,23 @@ def update_pin(message: types.Message, action: Text, other: Text = None) -> NoRe
     if action == 'get':
         entity_id: Text = controller.get_entity_id(message.text)
         status_zone: bool = controller.is_active(entity_id)
-        bot.reply_to(message, f'get({message.text}) => {status_zone}', reply_markup=get_markup_cmd())
+        bot.reply_to(message, f'get({message.text}) => {status_zone}',
+                     reply_markup=get_markup_cmd(), message_thread_id=topic_bot)
     elif action == 'set':
         controller.set_state(state=message.text.lower(), friendly_name=other)
         # set(OFF) => Vegetable 🍅
-        bot.reply_to(message, f'set({message.text}) => {other}', reply_markup=get_markup_cmd())
+        bot.reply_to(message, f'set({message.text}) => {other}',
+                     reply_markup=get_markup_cmd(), message_thread_id=topic_bot)
         send_status(message)
     else:
-        bot.reply_to(message, f'uknown action => {action}', reply_markup=get_markup_cmd())
+        bot.reply_to(message, f'uknown action => {action}',
+                     reply_markup=get_markup_cmd(), message_thread_id=topic_bot)
 
 
 @bot.message_handler(func=lambda message: message.chat.id in owner_bot, commands=[my_commands[3][1:]])
 def send_off(message: types.Message) -> NoReturn:
     send_status(message)
-    bot.reply_to(message, "closed all relays", reply_markup=get_markup_cmd())
+    bot.reply_to(message, "closed all relays", reply_markup=get_markup_cmd(), message_thread_id=topic_bot)
     controller.stop_all()
     send_status(message)
     return
@@ -317,11 +325,12 @@ def send_refresh(message: types.Message) -> NoReturn:
     try:
         log.debug('get calendar and update cron')
         get_events(GCalendar(), calendar_id, file_cron, int(config_basic.get('NUM_EVENTS')), bot=None, id_admin=None)
-        bot.reply_to(message, "update calendars and cron", reply_markup=get_markup_cmd())
+        bot.reply_to(message, "update calendars and cron", reply_markup=get_markup_cmd(), message_thread_id=topic_bot)
         send_events(message)
     except Exception as err:
         log.error(f'[-] Error: {err}')
-        bot.send_message(owner_bot[1], f'[-] Error GCalendar send_refresh: {err}', reply_markup=get_markup_cmd())
+        bot.send_message(owner_bot[1], f'[-] Error GCalendar send_refresh: {err}',
+                         reply_markup=get_markup_cmd(), message_thread_id=topic_bot)
     return
 
 
@@ -334,12 +343,14 @@ def send_events(message: types.Message) -> NoReturn:
         crons: List[List[Text]] = cron.cron_to_list(file_cron)
     except Exception as err:
         log.critical(f'[-] Error cron_to_list: {err}')
-        bot.reply_to(message, f'[-] Error cron_to_list: {err}', reply_markup=get_markup_cmd())
+        bot.reply_to(message, f'[-] Error cron_to_list: {err}',
+                     reply_markup=get_markup_cmd(), message_thread_id=topic_bot)
         return
 
     log.debug(crons)
     if len(crons) == 0:
-        bot.reply_to(message, f"no events in {str(file_cron)}", reply_markup=get_markup_cmd())
+        bot.reply_to(message, f"no events in {str(file_cron)}",
+                     reply_markup=get_markup_cmd(), message_thread_id=topic_bot)
         return
 
     for zone in crons[0:20]:  # only 20 events, more maybe exceded limit message size
@@ -388,7 +399,7 @@ def send_events(message: types.Message) -> NoReturn:
 @bot.message_handler(func=lambda message: message.chat.id in owner_bot)
 def text_not_valid(message: types.Message) -> NoReturn:
     texto: Text = 'unknown command, enter a valid command :)'
-    bot.reply_to(message, texto, reply_markup=get_markup_cmd())
+    bot.reply_to(message, texto, reply_markup=get_markup_cmd(), message_thread_id=topic_bot)
     return
 
 
@@ -397,7 +408,7 @@ def handler_others(message: types.Message) -> NoReturn:
     log.info(message)
     text: Text = "You're not allowed to perform this action, that's because you're not me.\n" \
                  f'As far as you know, it disappears -.- {str(message)}'
-    bot.reply_to(message, text, reply_markup=get_markup_cmd())
+    bot.reply_to(message, text)
     return
 
 
@@ -410,7 +421,8 @@ def daemon_gcalendar() -> NoReturn:
         calendar: GCalendar = GCalendar()
     except Exception as err:
         log.error(f'[-] Error daemon_gcalendar: {err}')
-        bot.send_message(owner_bot[1], f'[-] Error daemon_gcalendar: {err}', reply_markup=get_markup_cmd())
+        bot.send_message(owner_bot[1], f'[-] Error daemon_gcalendar: {err}',
+                         message_thread_id=topic_bot)
         time.sleep(5)
         os.kill(os.getpid(), signal.SIGUSR1)  # deberia de matar el proceso padre del thread
         log.warning('llego??')
@@ -420,14 +432,14 @@ def daemon_gcalendar() -> NoReturn:
     num_events: int = int(config_basic.get('NUM_EVENTS'))
 
     while True:
-        # Al capturar el error en el nbucle infinito, si falla una vez por x motivo no afectaria,
+        # Al capturar el error en el bucle infinito, si falla una vez por x motivo no afectaria,
         # ya que seguiria ejecutandose en siguientes iteraciones
         try:
             log.debug('get calendar and update cron')
             get_events(GCalendar(), calendar_id, file_cron, num_events, bot=None, id_admin=None)
         except Exception as e:
             log.error(f'Fail thread: {e}')
-            bot.send_message(owner_bot[1], f'[-] Error thread: {e}', reply_markup=get_markup_cmd())
+            bot.send_message(owner_bot[1], f'[-] Error thread: {e}', message_thread_id=topic_bot)
 
         # iteration += 1
 
@@ -440,11 +452,12 @@ def daemon_crond() -> NoReturn:
         try:
             log.debug('check crond')
             if 'crond' not in list(map(lambda i: i.name(), psutil.process_iter())):
-                bot.send_message(owner_bot[1], f'Starting crond', reply_markup=get_markup_cmd())
+                bot.send_message(owner_bot[1], f'Starting crond',
+                                 reply_markup=get_markup_cmd(), message_thread_id=topic_bot)
                 os.system('crond')
         except Exception as e:
             log.error(f'Fail thread: {e}')
-            bot.send_message(owner_bot[1], f'[-] Error thread: {e}', reply_markup=get_markup_cmd())
+            bot.send_message(owner_bot[1], f'[-] Error thread: {e}', message_thread_id=topic_bot)
 
         # https://stackoverflow.com/questions/17075788/python-is-time-sleepn-cpu-intensive
         time.sleep(240)
@@ -458,7 +471,8 @@ def main():
     d2.start()
 
     try:
-        bot.send_message(owner_bot[1], "Starting bot", reply_markup=get_markup_cmd(), disable_notification=True)
+        bot.send_message(owner_bot[1], "Starting bot", reply_markup=get_markup_cmd(),
+                         disable_notification=True, message_thread_id=topic_bot)
         log.info('[+] Starting bot')
     except (apihelper.ApiException, exceptions.ReadTimeout) as e:
         log.critical(f'[-] Error in init bot: {e}')

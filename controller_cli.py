@@ -22,10 +22,10 @@ else:  # raspberry
 
 
 def create_arg_parser() -> argparse:
-    example = "python3 %(prog)s -p 10 -a -v"
+    example = "python3 %(prog)s -e switch.irrigation_vegetable -s off"
 
     my_parser: argparse.ArgumentParser = argparse.ArgumentParser(
-        description='%(prog)s is a script to modify GPIO entity',
+        description='%(prog)s is a script to modify GPIO entity using HomeAssistant',
         usage=f'{example}')
 
     required_named = my_parser.add_argument_group('required named arguments')
@@ -69,8 +69,9 @@ def main():
 
             notifications: configparser.SectionProxy = config["NOTIFICATIONS"]
             bot: TeleBot = TeleBot(notifications.get('BOT_TOKEN'))
-            bot.send_message(int(notifications.get('ADMIN')), f'{arg.friendly_name}({entity_id}) => {arg.state}',
-                             disable_notification=True)
+            bot.send_message(int(notifications.get('GROUP')), f'{arg.friendly_name}({entity_id}) => {arg.state}',
+                             disable_notification=True,
+                             message_thread_id=int(notifications.get('TOPIC')))
         except Exception as err:
             log.critical(f'[-] Notify: {err}')
 
