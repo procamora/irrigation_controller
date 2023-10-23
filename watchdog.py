@@ -44,7 +44,8 @@ def main():
 
             bot: TeleBot = TeleBot(notifications.get('BOT_TOKEN'))
             bot.send_message(int(notifications.get('GROUP')), f'‼️ WATCHDOG => {status_clean} ‼️',
-                             disable_notification=disable_notification)
+                             disable_notification=disable_notification,
+                             message_thread_id=int(notifications.get('TOPIC')))
         except Exception as err:
             log.critical(f'Error: {err}')
 
